@@ -74,6 +74,49 @@
   .fade-up-delay-2 { animation-delay: 0.25s; }
   .fade-up-delay-3 { animation-delay: 0.4s; }
   .fade-up-delay-4 { animation-delay: 0.55s; }
+
+  /* ── Cockpit instrument bezel ── */
+
+  .cockpit-bezel {
+    position: relative;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+      0 0 0 1px rgba(0, 0, 0, 0.35),
+      0 2px 16px rgba(0, 0, 0, 0.22);
+    transition: box-shadow 0.35s ease;
+  }
+  .cockpit-bezel::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    pointer-events: none;
+    border-radius: calc(var(--radius) - 1px);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    z-index: 1;
+  }
+  .cockpit-bezel > * {
+    position: relative;
+    z-index: 2;
+  }
+  .cockpit-bezel:hover {
+    box-shadow:
+      inset 0 0 0 1px rgba(245, 158, 11, 0.2),
+      0 0 16px rgba(245, 158, 11, 0.1),
+      0 0 0 1px rgba(0, 0, 0, 0.35),
+      0 2px 20px rgba(0, 0, 0, 0.28);
+  }
+
+  .stat-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .progress-ring-glow {
+    transition: filter 0.35s ease;
+  }
+  .progress-ring-glow:hover {
+    filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.35));
+  }
 }
 
 /* ── Keyframes ── */

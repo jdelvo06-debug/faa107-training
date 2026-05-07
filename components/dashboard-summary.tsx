@@ -22,7 +22,7 @@ export function DashboardSummary() {
   return (
     <div className="grid gap-5">
       <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="border-white/10 bg-aviation-panel shadow-cockpit">
+        <Card className="cockpit-bezel border-white/10 bg-aviation-panel shadow-cockpit">
           <CardContent className="grid gap-6 p-6 md:grid-cols-[auto_1fr] md:items-center">
             <ProgressRing value={overall} label="Overall progress" />
             <div>
@@ -45,7 +45,7 @@ export function DashboardSummary() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-white/10 bg-white/[0.03]">
+        <Card className="cockpit-bezel border-white/10 bg-white/[0.03]">
           <CardHeader>
             <CardTitle>Snapshot</CardTitle>
           </CardHeader>
@@ -53,27 +53,27 @@ export function DashboardSummary() {
             <div>
               <div className="mb-2 flex justify-between text-sm">
                 <span>Modules completed</span>
-                <span>{completedModules}/13</span>
+                <span className="stat-mono">{completedModules}/13</span>
               </div>
               <Progress value={Math.round((completedModules / modules.length) * 100)} />
             </div>
             <div>
               <div className="mb-2 flex justify-between text-sm">
                 <span>Flashcards reviewed</span>
-                <span>{flashcardTotals.reviewed}/{flashcardTotals.total}</span>
+                <span className="stat-mono">{flashcardTotals.reviewed}/{flashcardTotals.total}</span>
               </div>
               <Progress value={Math.round((flashcardTotals.reviewed / flashcardTotals.total) * 100)} />
             </div>
             <div className="rounded-lg border border-white/10 p-4">
               <p className="text-sm text-muted-foreground">Latest exam</p>
-              <p className="mt-1 text-2xl font-bold">{latestExam ? `${latestExam.score}/${latestExam.total}` : "Not taken"}</p>
+              <p className="mt-1 text-2xl font-bold stat-mono">{latestExam ? `${latestExam.score}/${latestExam.total}` : "Not taken"}</p>
             </div>
           </CardContent>
         </Card>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-3">
-        <Card>
+        <Card className="cockpit-bezel bg-card/95">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-primary" />
@@ -87,7 +87,7 @@ export function DashboardSummary() {
             </Button>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="cockpit-bezel bg-card/95">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ClipboardCheck className="h-5 w-5 text-primary" />
@@ -100,7 +100,7 @@ export function DashboardSummary() {
                 <div key={area.topic}>
                   <div className="mb-2 flex justify-between text-sm">
                     <span>{area.topic}</span>
-                    <span>{area.percent}%</span>
+                    <span className="stat-mono">{area.percent}%</span>
                   </div>
                   <Progress value={area.percent} />
                 </div>
@@ -110,7 +110,7 @@ export function DashboardSummary() {
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="cockpit-bezel bg-card/95">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-primary" />
