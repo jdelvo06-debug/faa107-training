@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 212 53% 8%;
+    --foreground: 205 40% 96%;
+    --card: 211 42% 12%;
+    --card-foreground: 205 40% 96%;
+    --popover: 211 42% 10%;
+    --popover-foreground: 205 40% 96%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 218 48% 9%;
+    --secondary: 210 28% 20%;
+    --secondary-foreground: 205 40% 96%;
+    --muted: 211 30% 17%;
+    --muted-foreground: 205 17% 70%;
+    --accent: 199 57% 21%;
+    --accent-foreground: 199 88% 92%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 24% 23%;
+    --input: 210 24% 23%;
+    --ring: 38 92% 50%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    background:
+      linear-gradient(135deg, rgba(142, 202, 230, 0.08), transparent 28rem),
+      radial-gradient(circle at 80% 10%, rgba(245, 158, 11, 0.12), transparent 22rem),
+      #061525;
+  }
+
+  a {
+    @apply underline-offset-4;
+  }
+}
+
+@layer utilities {
+  .runway-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 36px 36px;
+  }
+}
