@@ -2,7 +2,7 @@
 
 Free, self-contained study platform for the FAA Part 107 remote pilot certification exam (UAG). Built for self-guided learners, classroom instructors, and Drone as a Service programs.
 
-**Live:** [faa107.vercel.app](https://faa107.vercel.app) (coming soon)
+**Live:** [faa107-training.vercel.app](https://faa107-training.vercel.app)
 
 ---
 
