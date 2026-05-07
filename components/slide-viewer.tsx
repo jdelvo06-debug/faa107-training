@@ -208,6 +208,12 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
                   {slide.title}
                 </h2>
                 <div className="grid gap-5">{slide.blocks.map((block, blockIndex) => <BlockRenderer key={blockIndex} block={block} />)}</div>
+                {slide.takeaway ? (
+                  <div className="mt-8 rounded-lg border-l-[3px] border-primary bg-primary/[0.07] p-4 sm:p-5">
+                    <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-primary">Key Takeaway</p>
+                    <p className="text-sm leading-6 text-slate-100">{slide.takeaway}</p>
+                  </div>
+                ) : null}
                 {slide.sources?.length ? (
                   <div className="mt-8 flex flex-wrap gap-2">
                     {slide.sources.map((source) => (

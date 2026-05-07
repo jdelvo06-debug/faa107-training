@@ -68,7 +68,8 @@ const moduleBlueprints = [
             text: "Start with Module 1 for orientation and exam format. Work through modules in order or jump to weak areas identified by your practice exam results. All 13 modules are fully built."
           }
         ],
-        sources: [faaPilotSource]
+        sources: [faaPilotSource],
+        takeaway: "Part 107 governs most commercial small UAS flights. Use these modules in any order, but aim to complete all 13 before attempting the practice exam."
       },
       {
         id: "m1-2",

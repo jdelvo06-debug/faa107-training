@@ -50,6 +50,7 @@ export interface Slide {
   id: string;
   title: string;
   kicker?: string;
+  takeaway?: string;
   blocks: SlideContentBlock[];
   sources?: SourceLink[];
 }
