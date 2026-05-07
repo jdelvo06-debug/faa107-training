@@ -16,18 +16,19 @@ const highlights = [
 export default function LandingPage() {
   return (
     <div className="grid gap-10">
-      <section className="runway-grid overflow-hidden rounded-lg border border-white/10 bg-aviation-panel shadow-cockpit">
+      <section className="runway-grid animate-drift relative overflow-hidden rounded-lg border border-white/10 bg-aviation-panel shadow-cockpit">
+        <div className="hero-glow" />
         <div className="grid gap-8 p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
           <div className="flex min-h-[520px] flex-col justify-center">
-            <Badge variant="amber" className="mb-5 w-fit">FAA Part 107</Badge>
-            <h1 className="max-w-4xl text-5xl font-black leading-[1.02] tracking-normal text-white sm:text-6xl lg:text-7xl">
+            <Badge variant="amber" className="fade-up fade-up-delay-1 mb-5 w-fit">FAA Part 107</Badge>
+            <h1 className="fade-up fade-up-delay-2 max-w-4xl text-5xl font-black leading-[1.02] tracking-normal text-white sm:text-6xl lg:text-7xl">
               Remote pilot certification training, built like a flight deck.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
+            <p className="fade-up fade-up-delay-3 mt-6 max-w-2xl text-lg leading-8 text-slate-300">
               Study the Part 107 path with slide lessons, check-on-learning quizzes, flashcards, and a timed practice
               exam that tracks weak areas in your browser.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="fade-up fade-up-delay-4 mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link href="/modules/1">
                   Start Module 1

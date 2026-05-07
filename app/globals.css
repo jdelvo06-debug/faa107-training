@@ -50,4 +50,47 @@
       linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
     background-size: 36px 36px;
   }
+
+  /* ── Hero animations ── */
+
+  .runway-grid.animate-drift {
+    animation: drift-grid 28s linear infinite;
+  }
+
+  .hero-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 70% 60% at 30% 40%, rgba(245, 158, 11, 0.18), transparent 70%);
+    animation: pulse-glow 6s ease-in-out infinite alternate;
+  }
+
+  .fade-up {
+    opacity: 0;
+    transform: translateY(24px);
+    animation: fade-up-in 0.8s ease-out forwards;
+  }
+  .fade-up-delay-1 { animation-delay: 0.1s; }
+  .fade-up-delay-2 { animation-delay: 0.25s; }
+  .fade-up-delay-3 { animation-delay: 0.4s; }
+  .fade-up-delay-4 { animation-delay: 0.55s; }
+}
+
+/* ── Keyframes ── */
+
+@keyframes drift-grid {
+  from { background-position: 0 0; }
+  to   { background-position: 36px 36px; }
+}
+
+@keyframes pulse-glow {
+  from { opacity: 0.6; }
+  to   { opacity: 1; }
+}
+
+@keyframes fade-up-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
