@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ArrowRight, Check, ExternalLink, Layers, ListChecks, RotateCcw } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -115,12 +116,18 @@ function BlockRenderer({ block }: { block: SlideContentBlock }) {
 
 export function SlideViewer({ courseModule }: { courseModule: Module }) {
   const [index, setIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
   const slide = courseModule.slides[index];
   const percent = useMemo(
     () => Math.round(((index + 1) / courseModule.slides.length) * 100),
     [index, courseModule.slides.length]
   );
   const lastVisitedId = useRef<string | null>(null);
+
+  const goToSlide = (nextIndex: number) => {
+    setDirection(nextIndex > index ? 1 : -1);
+    setIndex(Math.min(courseModule.slides.length - 1, Math.max(0, nextIndex)));
+  };
 
   useEffect(() => {
     if (lastVisitedId.current === slide.id) return;
@@ -136,9 +143,11 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowRight") {
+        setDirection(1);
         setIndex((current) => Math.min(courseModule.slides.length - 1, current + 1));
       }
       if (event.key === "ArrowLeft") {
+        setDirection(-1);
         setIndex((current) => Math.max(0, current - 1));
       }
     };
@@ -181,33 +190,45 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
             </div>
             <Progress value={percent} className="bg-white/10" />
           </div>
-          <article className="min-h-[540px] p-5 sm:p-8">
-            {slide.kicker ? (
-              <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-primary">{slide.kicker}</p>
-            ) : null}
-            <h2 className="mb-6 max-w-4xl text-3xl font-bold leading-tight tracking-normal text-white sm:text-5xl">
-              {slide.title}
-            </h2>
-            <div className="grid gap-5">{slide.blocks.map((block, blockIndex) => <BlockRenderer key={blockIndex} block={block} />)}</div>
-            {slide.sources?.length ? (
-              <div className="mt-8 flex flex-wrap gap-2">
-                {slide.sources.map((source) => (
-                  <a
-                    key={source.href}
-                    href={source.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-xs text-sky-100 hover:bg-white/10"
-                  >
-                    {source.label}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                ))}
-              </div>
-            ) : null}
-          </article>
+          <div className="relative min-h-[540px] overflow-hidden">
+            <AnimatePresence mode="wait" initial={false} custom={direction}>
+              <motion.article
+                key={slide.id}
+                custom={direction}
+                initial={{ opacity: 0, x: direction > 0 ? 36 : -36 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: direction > 0 ? -36 : 36 }}
+                transition={{ duration: 0.28, ease: "easeOut" }}
+                className="min-h-[540px] p-5 sm:p-8"
+              >
+                {slide.kicker ? (
+                  <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-primary">{slide.kicker}</p>
+                ) : null}
+                <h2 className="mb-6 max-w-4xl text-3xl font-bold leading-tight tracking-normal text-white sm:text-5xl">
+                  {slide.title}
+                </h2>
+                <div className="grid gap-5">{slide.blocks.map((block, blockIndex) => <BlockRenderer key={blockIndex} block={block} />)}</div>
+                {slide.sources?.length ? (
+                  <div className="mt-8 flex flex-wrap gap-2">
+                    {slide.sources.map((source) => (
+                      <a
+                        key={source.href}
+                        href={source.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-xs text-sky-100 hover:bg-white/10"
+                      >
+                        {source.label}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
+              </motion.article>
+            </AnimatePresence>
+          </div>
           <div className="flex flex-col gap-3 border-t border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <Button variant="outline" disabled={index === 0} onClick={() => setIndex((current) => Math.max(0, current - 1))}>
+            <Button variant="outline" disabled={index === 0} onClick={() => goToSlide(index - 1)}>
               <ArrowLeft className="h-4 w-4" />
               Previous
             </Button>
@@ -216,14 +237,14 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
                 <button
                   key={item.id}
                   aria-label={`Go to slide ${slideIndex + 1}`}
-                  onClick={() => setIndex(slideIndex)}
+                  onClick={() => goToSlide(slideIndex)}
                   className={`h-2.5 w-8 rounded-full transition-colors ${slideIndex === index ? "bg-primary" : "bg-white/20 hover:bg-white/35"}`}
                 />
               ))}
             </div>
             <Button
               disabled={index === courseModule.slides.length - 1}
-              onClick={() => setIndex((current) => Math.min(courseModule.slides.length - 1, current + 1))}
+              onClick={() => goToSlide(index + 1)}
             >
               Next
               <ArrowRight className="h-4 w-4" />
