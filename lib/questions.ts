@@ -910,6 +910,422 @@ export const examQuestions: QuizQuestion[] = [
     choices: ["Skim for keywords and guess", "Mentally flip the question: 'What ARE the requirements?' Then cross off those that are requirements.", "Skip the question — NOT questions are too hard", "Read the first answer choice and select it if it sounds right"],
     correctIndex: 1,
     explanation: "NOT questions trick fast readers. Flip the question mentally: find the three true statements first, then the remaining one must be false — and that is your answer."
+  },
+  {
+    id: "exam-airspace-8",
+    topic: "Airspace",
+    prompt: "A Part 107 pilot wants to fly from the surface inside Class B airspace. What must be obtained before the operation?",
+    choices: ["A weather briefing only", "FAA authorization for the controlled airspace", "A Remote ID broadcast module waiver", "Permission from any nearby airport business"],
+    correctIndex: 1,
+    explanation: "Class B is controlled airspace. Part 107 operations there require FAA airspace authorization before flight."
+  },
+  {
+    id: "exam-airspace-9",
+    topic: "Airspace",
+    prompt: "On a sectional chart, what does a solid magenta line generally indicate?",
+    choices: ["Class B airspace", "Class C airspace", "Class E airspace beginning at the surface", "A military training route"],
+    correctIndex: 2,
+    explanation: "A solid magenta boundary indicates Class E airspace that starts at the surface. Part 107 pilots need authorization to operate there."
+  },
+  {
+    id: "exam-airspace-10",
+    topic: "Airspace",
+    prompt: "A blue segmented circle is shown around an airport on a sectional chart. What airspace is normally indicated?",
+    choices: ["Class B", "Class C", "Class D", "Class G"],
+    correctIndex: 2,
+    explanation: "Class D airspace is normally shown by a dashed blue segmented boundary around a towered airport."
+  },
+  {
+    id: "exam-airspace-11",
+    topic: "Airspace",
+    prompt: "A sectional chart shows a magenta airport symbol with no control tower. What does the magenta airport color generally mean?",
+    choices: ["The airport is non-towered", "The airport is military only", "The airport is closed permanently", "The airport is inside Class B airspace"],
+    correctIndex: 0,
+    explanation: "Magenta airport symbols generally identify non-towered airports. Blue airport symbols generally identify towered airports."
+  },
+  {
+    id: "exam-airspace-12",
+    topic: "Airspace",
+    prompt: "What does a maximum elevation figure of 46 mean on a sectional chart?",
+    choices: ["460 ft AGL", "4,600 ft MSL", "46,000 ft MSL", "4,600 ft AGL"],
+    correctIndex: 1,
+    explanation: "Maximum elevation figures are shown in hundreds of feet MSL. An MEF of 46 means 4,600 ft MSL."
+  },
+  {
+    id: "exam-airspace-13",
+    topic: "Airspace",
+    prompt: "A runway has a right traffic pattern noted in the chart supplement. Why does that matter to a nearby drone operation?",
+    choices: ["Manned aircraft may fly the pattern on the opposite side than expected", "The runway is closed to all traffic", "Part 107 altitude limits no longer apply", "The airport automatically becomes Class B"],
+    correctIndex: 0,
+    explanation: "Right traffic means aircraft pattern turns are to the right, so traffic may be on the opposite side of the runway from a standard left pattern."
+  },
+  {
+    id: "exam-airspace-14",
+    topic: "Airspace",
+    prompt: "A restricted area is active along the planned route. What is the safest Part 107 decision?",
+    choices: ["Enter if flying below 400 ft AGL", "Avoid it unless the controlling agency grants permission", "Enter only if Remote ID is working", "Enter if there are no clouds nearby"],
+    correctIndex: 1,
+    explanation: "Restricted areas may contain hazardous activity. Do not enter an active restricted area unless the controlling agency authorizes the operation."
+  },
+  {
+    id: "exam-airspace-15",
+    topic: "Airspace",
+    prompt: "A charted Alert Area lies near the planned flight location. What does that tell the remote pilot?",
+    choices: ["Flight is prohibited without a waiver", "High volume or unusual aerial activity may be present", "The airport tower is closed", "Only military aircraft may use the area"],
+    correctIndex: 1,
+    explanation: "Alert Areas warn pilots about high-volume training or unusual aerial activity. They are not automatically prohibited, but they require extra vigilance."
+  },
+  {
+    id: "exam-weather-8",
+    topic: "Weather",
+    prompt: "A METAR wind group reads 21012G22KT. What does it mean?",
+    choices: ["Wind from 210 degrees at 12 knots gusting to 22 knots", "Wind toward 210 degrees at 22 knots gusting to 12 knots", "Wind from 210 degrees at 12 mph gusting to 22 mph", "Wind variable from 210 to 220 degrees"],
+    correctIndex: 0,
+    explanation: "METAR winds are reported by direction from which the wind is blowing and speed in knots. G22KT means gusts to 22 knots."
+  },
+  {
+    id: "exam-weather-9",
+    topic: "Weather",
+    prompt: "A METAR reports 1 1/2SM visibility. What does this mean for a standard Part 107 flight?",
+    choices: ["It is legal if the drone stays below 100 ft", "It is below the 3 statute mile minimum", "It is legal only with a visual observer", "It is acceptable in Class G airspace"],
+    correctIndex: 1,
+    explanation: "Standard Part 107 operations require at least 3 statute miles of visibility from the control station."
+  },
+  {
+    id: "exam-weather-10",
+    topic: "Weather",
+    prompt: "What weather condition most increases the risk of mechanical turbulence near buildings and trees?",
+    choices: ["Calm wind under clear skies", "Strong gusty wind flowing around obstacles", "Low humidity on a cold morning", "High pressure with light winds"],
+    correctIndex: 1,
+    explanation: "Strong, gusty wind over and around obstacles creates mechanical turbulence and rotor zones that can upset a small UAS."
+  },
+  {
+    id: "exam-weather-11",
+    topic: "Weather",
+    prompt: "What is the best interpretation of a small temperature-dew point spread?",
+    choices: ["The air is dry and visibility will improve", "The air is near saturation and fog or low clouds are more likely", "Thunderstorms are impossible", "Density altitude is always low"],
+    correctIndex: 1,
+    explanation: "When temperature and dew point are close, relative humidity is high and fog or low clouds become more likely if cooling continues."
+  },
+  {
+    id: "exam-weather-12",
+    topic: "Weather",
+    prompt: "Which cloud type is most associated with thunderstorms and severe turbulence?",
+    choices: ["Cirrus", "Stratus", "Cumulonimbus", "Altostratus"],
+    correctIndex: 2,
+    explanation: "Cumulonimbus clouds are thunderstorm clouds and can contain severe turbulence, lightning, hail, and microbursts."
+  },
+  {
+    id: "exam-weather-13",
+    topic: "Weather",
+    prompt: "A cold front passes the area just before a planned drone flight. What weather change is commonly expected?",
+    choices: ["Stable air with no wind shift", "Abrupt wind shift, gusts, and possible turbulence", "Permanent improvement in visibility only", "No weather effect below 400 ft"],
+    correctIndex: 1,
+    explanation: "Cold fronts often bring wind shifts, gusty surface winds, turbulence, and precipitation near the frontal passage."
+  },
+  {
+    id: "exam-weather-14",
+    topic: "Weather",
+    prompt: "What does OVC008 in a METAR indicate?",
+    choices: ["Overcast clouds at 800 ft AGL", "Overcast clouds at 8,000 ft MSL", "Visibility of 0.8 statute miles", "Wind from 008 degrees"],
+    correctIndex: 0,
+    explanation: "Cloud heights in METARs are reported in hundreds of feet AGL. OVC008 means an overcast ceiling at 800 ft AGL."
+  },
+  {
+    id: "exam-weather-15",
+    topic: "Weather",
+    prompt: "Why can a valley be hazardous for a morning UAS flight after a calm, clear night?",
+    choices: ["Valleys prevent fog formation", "Cold air can drain into low areas and produce fog or localized low visibility", "All winds stop below ridge height", "GPS signals are stronger in valleys"],
+    correctIndex: 1,
+    explanation: "Cold, dense air can settle in valleys overnight. This can create fog, frost, and localized low visibility even when nearby higher terrain is clear."
+  },
+  {
+    id: "exam-performance-3",
+    topic: "Loading & Performance",
+    prompt: "What happens to propeller and motor performance as density altitude increases?",
+    choices: ["Performance improves because the air is thinner", "More power may be required and climb performance can decrease", "Battery voltage automatically increases", "Center of gravity moves forward"],
+    correctIndex: 1,
+    explanation: "High density altitude means thinner air. Propellers produce less thrust, motors work harder, and climb performance can decrease."
+  },
+  {
+    id: "exam-performance-4",
+    topic: "Loading & Performance",
+    prompt: "A payload shifts aft during flight. What is the main performance concern?",
+    choices: ["Improved stability", "Changed center of gravity and reduced controllability", "Higher visibility minimums", "Automatic Remote ID failure"],
+    correctIndex: 1,
+    explanation: "A shifting payload moves the center of gravity. That can reduce stability, controllability, and the margin available for the flight controller."
+  },
+  {
+    id: "exam-performance-5",
+    topic: "Loading & Performance",
+    prompt: "Why should a remote pilot verify the manufacturer's maximum takeoff weight before adding accessories?",
+    choices: ["Accessories always improve endurance", "Exceeding weight limits can reduce performance and may move the aircraft outside small UAS limits", "Weight only matters above 1,200 ft AGL", "The FAA requires every payload to be painted"],
+    correctIndex: 1,
+    explanation: "Extra equipment increases weight, can degrade performance, and must keep the aircraft within manufacturer limits and under the Part 107 small UAS weight limit."
+  },
+  {
+    id: "exam-performance-6",
+    topic: "Loading & Performance",
+    prompt: "How does operating near the low-voltage limit affect a small UAS?",
+    choices: ["It improves reserve power", "Voltage sag under load can trigger forced landing or loss of control", "It turns off wind effects", "It increases lift from the propellers"],
+    correctIndex: 1,
+    explanation: "Low battery voltage can sag under load, especially during climbs or gusts, causing reduced power, forced landing, or loss of control."
+  },
+  {
+    id: "exam-performance-7",
+    topic: "Loading & Performance",
+    prompt: "What is the practical effect of a heavier aircraft during a braking or avoidance maneuver?",
+    choices: ["It stops in a shorter distance", "It has more inertia and may need more distance to stop or turn", "It ignores wind gusts completely", "It no longer needs VLOS"],
+    correctIndex: 1,
+    explanation: "More mass means more inertia. A heavier aircraft may respond more slowly and require more distance to stop, turn, or recover."
+  },
+  {
+    id: "exam-performance-8",
+    topic: "Loading & Performance",
+    prompt: "A drone is launched from a rooftop on a hot day. Why can performance be worse than expected?",
+    choices: ["High temperature lowers density altitude", "Rooftop heat and high temperature can increase density altitude and reduce thrust", "Altitude above ground improves battery chemistry", "The aircraft is exempt from weight limits on roofs"],
+    correctIndex: 1,
+    explanation: "Hot air over surfaces and higher launch elevation increase density altitude. Thinner air reduces propeller thrust and climb performance."
+  },
+  {
+    id: "exam-performance-9",
+    topic: "Loading & Performance",
+    prompt: "Why should the remote PIC account for wind when estimating battery reserve?",
+    choices: ["Groundspeed and power required can change significantly on the return leg", "Wind only affects fixed-wing aircraft", "Wind always improves battery endurance", "Battery reserve is unrelated to flight path"],
+    correctIndex: 0,
+    explanation: "A headwind reduces groundspeed and can require more power. Battery planning must include enough reserve to return against the wind."
+  },
+  {
+    id: "exam-performance-10",
+    topic: "Loading & Performance",
+    prompt: "What is the safest way to evaluate performance after installing a new payload mount?",
+    choices: ["Start the paid mission immediately", "Perform a controlled hover and maneuver check in a safe area before the mission", "Assume the autopilot will compensate for all changes", "Only check that the camera feed works"],
+    correctIndex: 1,
+    explanation: "A new mount can affect balance, vibration, and control response. Test hover, climb, braking, and maneuvering in a safe area first."
+  },
+  {
+    id: "exam-performance-11",
+    topic: "Loading & Performance",
+    prompt: "What is one likely effect of propeller damage on a small UAS?",
+    choices: ["Reduced vibration and better efficiency", "Imbalance, vibration, and possible motor stress", "Automatic airspace authorization", "More accurate compass calibration"],
+    correctIndex: 1,
+    explanation: "Damaged propellers can create imbalance and vibration, which can stress motors, degrade sensor readings, and cause loss of control."
+  },
+  {
+    id: "exam-performance-12",
+    topic: "Loading & Performance",
+    prompt: "Which condition most reduces available climb performance?",
+    choices: ["Cool dry air at sea level with a light payload", "Hot humid air at high elevation with a heavy payload", "Cold air with a fully charged battery", "Low elevation with no wind"],
+    correctIndex: 1,
+    explanation: "Hot, high, humid conditions reduce air density, and a heavy payload increases power required. Together they sharply reduce climb performance."
+  },
+  {
+    id: "exam-performance-13",
+    topic: "Loading & Performance",
+    prompt: "A small UAS repeatedly tilts to one side while hovering after a payload change. What should the remote PIC suspect first?",
+    choices: ["A TFR has activated", "The payload may be unbalanced or mounted off center", "Visibility is below minimum", "The exam score is too low"],
+    correctIndex: 1,
+    explanation: "A hover bias after a payload change suggests a balance or mounting issue. Land and correct the loading before continuing."
+  },
+  {
+    id: "exam-performance-14",
+    topic: "Loading & Performance",
+    prompt: "Why is takeoff from tall grass or loose gravel a performance and safety concern?",
+    choices: ["It can obstruct propellers, ingest debris, or destabilize the aircraft", "It increases battery capacity", "It eliminates the need for a preflight inspection", "It improves GPS reception"],
+    correctIndex: 0,
+    explanation: "Grass and debris can contact propellers or be thrown into the aircraft. Use a clear, stable launch surface."
+  },
+  {
+    id: "exam-performance-15",
+    topic: "Loading & Performance",
+    prompt: "What is the most conservative action if actual flight time is consistently shorter than planned?",
+    choices: ["Reduce reserve requirements", "Shorten the mission profile and investigate battery, payload, wind, and temperature factors", "Disable low-battery warnings", "Fly farther to recalibrate the estimate"],
+    correctIndex: 1,
+    explanation: "Unexpected endurance loss needs investigation. Reduce mission demands and check battery condition, payload weight, wind, and temperature before relying on the aircraft."
+  },
+  {
+    id: "exam-reg-3",
+    topic: "Regulations",
+    prompt: "What is the maximum groundspeed allowed for standard Part 107 operations?",
+    choices: ["60 mph", "87 knots", "100 mph", "120 knots"],
+    correctIndex: 2,
+    explanation: "Standard Part 107 operations are limited to 100 mph groundspeed unless a waiver applies."
+  },
+  {
+    id: "exam-reg-4",
+    topic: "Regulations",
+    prompt: "What is the normal maximum altitude for a Part 107 flight away from structures?",
+    choices: ["200 ft AGL", "400 ft AGL", "700 ft AGL", "1,200 ft AGL"],
+    correctIndex: 1,
+    explanation: "The standard Part 107 altitude limit is 400 ft AGL unless a structure-related allowance or waiver applies."
+  },
+  {
+    id: "exam-reg-5",
+    topic: "Regulations",
+    prompt: "How close may a Part 107 aircraft operate to a structure above 400 ft AGL under the standard structure allowance?",
+    choices: ["Within 100 ft laterally", "Within 400 ft laterally", "Within 1 NM", "No closer than 500 ft"],
+    correctIndex: 1,
+    explanation: "Part 107 allows operation within 400 ft of a structure and not higher than 400 ft above the structure's immediate uppermost limit."
+  },
+  {
+    id: "exam-reg-6",
+    topic: "Regulations",
+    prompt: "Who is directly responsible for and has final authority over a Part 107 operation?",
+    choices: ["The visual observer", "The remote pilot in command", "The property owner", "The aircraft manufacturer"],
+    correctIndex: 1,
+    explanation: "The remote PIC has final authority and responsibility for the safe conduct of the small UAS operation."
+  },
+  {
+    id: "exam-reg-7",
+    topic: "Regulations",
+    prompt: "Under Part 107, what must the remote PIC do before flight regarding the aircraft?",
+    choices: ["Ask the FAA to inspect it", "Ensure it is in a condition for safe operation", "Remove all manufacturer labels", "File a flight plan for every operation"],
+    correctIndex: 1,
+    explanation: "Before flight, the remote PIC must ensure the small UAS is in a condition for safe operation."
+  },
+  {
+    id: "exam-reg-8",
+    topic: "Regulations",
+    prompt: "When must a Part 107 accident be reported to the FAA?",
+    choices: ["Only when the aircraft is destroyed", "Within 10 days if it causes serious injury, loss of consciousness, or qualifying property damage", "Within 24 hours for every hard landing", "Only if it occurs in controlled airspace"],
+    correctIndex: 1,
+    explanation: "Part 107 accident reports are due within 10 days when the event meets the injury or property-damage reporting threshold."
+  },
+  {
+    id: "exam-reg-9",
+    topic: "Regulations",
+    prompt: "What is required for routine Part 107 night operations?",
+    choices: ["A medical certificate", "Anti-collision lighting visible for at least 3 statute miles", "An instrument rating", "A visual observer with night vision goggles"],
+    correctIndex: 1,
+    explanation: "Routine night operations require anti-collision lighting visible for at least 3 statute miles and with a flash rate sufficient to avoid collision."
+  },
+  {
+    id: "exam-reg-10",
+    topic: "Regulations",
+    prompt: "May a person who does not hold a remote pilot certificate manipulate the controls during a Part 107 operation?",
+    choices: ["No, never", "Yes, if directly supervised by a remote PIC who can immediately take control", "Yes, only in Class G and below 100 ft", "Yes, if the person owns the property"],
+    correctIndex: 1,
+    explanation: "A non-certificated person may manipulate the controls if under the direct supervision of a remote PIC who can immediately take control."
+  },
+  {
+    id: "exam-reg-11",
+    topic: "Regulations",
+    prompt: "What is the rule for dropping an object from a small UAS?",
+    choices: ["It is always prohibited", "It is allowed only if it does not create an undue hazard to people or property", "It is allowed only over water", "It requires a medical certificate"],
+    correctIndex: 1,
+    explanation: "Part 107 permits dropping objects only if the operation does not create an undue hazard to people or property."
+  },
+  {
+    id: "exam-reg-12",
+    topic: "Regulations",
+    prompt: "Which operation normally requires a Part 107 waiver?",
+    choices: ["Flying in Class G below 400 ft AGL with VLOS", "Operating beyond visual line of sight", "Checking NOTAMs before flight", "Using a visual observer"],
+    correctIndex: 1,
+    explanation: "Beyond visual line of sight is outside standard Part 107 operating limits and normally requires a waiver."
+  },
+  {
+    id: "exam-reg-13",
+    topic: "Regulations",
+    prompt: "What does Part 107 require for visual line of sight?",
+    choices: ["The aircraft must be visible to the remote PIC or visual observer without vision aids other than corrective lenses", "The aircraft may be tracked only on a map display", "Binoculars may be used as the primary viewing method", "VLOS is required only in controlled airspace"],
+    correctIndex: 0,
+    explanation: "Part 107 requires visual line of sight using unaided vision, except for corrective lenses. Displays do not replace VLOS."
+  },
+  {
+    id: "exam-reg-14",
+    topic: "Regulations",
+    prompt: "What is the maximum allowed weight for a small unmanned aircraft operated under Part 107?",
+    choices: ["Less than 25 pounds", "Less than 55 pounds including anything attached or carried", "55 pounds empty weight plus payload", "Less than 100 pounds with registration"],
+    correctIndex: 1,
+    explanation: "A small unmanned aircraft under Part 107 must weigh less than 55 pounds, including everything attached to or carried by the aircraft."
+  },
+  {
+    id: "exam-reg-15",
+    topic: "Regulations",
+    prompt: "Can a remote PIC operate multiple small UAS at the same time under standard Part 107 rules?",
+    choices: ["Yes, if each drone is below 250 grams", "No, a person may not act as remote PIC or visual observer for more than one small UAS at the same time", "Yes, if all drones remain below 100 ft", "Yes, only in Class G airspace"],
+    correctIndex: 1,
+    explanation: "Standard Part 107 prohibits a person from acting as remote PIC or visual observer for more than one small UAS operation at a time."
+  },
+  {
+    id: "exam-ops-12",
+    topic: "Operations",
+    prompt: "A visual observer loses sight of the drone while the remote PIC is watching the controller screen. What is the correct response?",
+    choices: ["Continue if telemetry is normal", "Reestablish VLOS immediately or safely terminate the flight", "Climb until the drone is visible", "Switch to map view and continue"],
+    correctIndex: 1,
+    explanation: "Telemetry does not replace VLOS. If VLOS cannot be maintained, the crew must regain it immediately or safely terminate the operation."
+  },
+  {
+    id: "exam-ops-13",
+    topic: "Operations",
+    prompt: "What is the best reason to brief emergency landing zones before takeoff?",
+    choices: ["It satisfies aircraft registration", "It reduces decision time if a battery, link, or propulsion problem occurs", "It replaces weather planning", "It allows flight over people without limits"],
+    correctIndex: 1,
+    explanation: "Preselecting emergency landing zones makes a time-critical failure response faster and more deliberate."
+  },
+  {
+    id: "exam-ops-14",
+    topic: "Operations",
+    prompt: "What should a remote pilot do after a lost-link event if the aircraft returns and lands normally?",
+    choices: ["Launch again immediately", "Stop and diagnose the cause before further flight", "Disable return-to-home", "Only replace the propellers"],
+    correctIndex: 1,
+    explanation: "A lost-link event indicates a control or signal problem. Diagnose distance, interference, antennas, settings, and equipment before flying again."
+  },
+  {
+    id: "exam-ops-15",
+    topic: "Operations",
+    prompt: "Why should a remote pilot brief a visual observer on sterile cockpit expectations?",
+    choices: ["To prevent nonessential conversation during critical phases or abnormal events", "To make the observer responsible for the certificate", "To eliminate the need for checklists", "To replace the site survey"],
+    correctIndex: 0,
+    explanation: "Sterile cockpit discipline keeps crew attention on safety-critical tasks during takeoff, landing, traffic conflicts, and abnormal situations."
+  },
+  {
+    id: "exam-adm-5",
+    topic: "Operations",
+    prompt: "A pilot says, 'I need to decide right now before the client gets upset.' Which hazardous attitude is most involved?",
+    choices: ["Impulsivity", "Macho", "Resignation", "Anti-authority"],
+    correctIndex: 0,
+    explanation: "Impulsivity is the urge to act without thinking. The antidote is to slow down and think first."
+  },
+  {
+    id: "exam-adm-6",
+    topic: "Operations",
+    prompt: "In the PAVE checklist, which category includes a forecast for gusty winds and low ceilings?",
+    choices: ["Pilot", "Aircraft", "enVironment", "External pressures"],
+    correctIndex: 2,
+    explanation: "PAVE stands for Pilot, Aircraft, enVironment, and External pressures. Weather and airspace conditions are part of the environment."
+  },
+  {
+    id: "exam-adm-7",
+    topic: "Operations",
+    prompt: "A pilot feels there is nothing they can do after the drone begins drifting toward trees. Which hazardous attitude is this?",
+    choices: ["Macho", "Resignation", "Invulnerability", "Anti-authority"],
+    correctIndex: 1,
+    explanation: "Resignation is the belief that the pilot is helpless. The antidote is: 'I am not helpless. I can make a difference.'"
+  },
+  {
+    id: "exam-phys-5",
+    topic: "Operations",
+    prompt: "Which scanning technique improves the chance of seeing other aircraft while maintaining VLOS?",
+    choices: ["Stare at one point without moving the eyes", "Use short, regularly spaced eye movements and pause to focus", "Look only at the controller screen", "Scan only when the visual observer speaks"],
+    correctIndex: 1,
+    explanation: "Effective visual scanning uses short eye movements with brief pauses, allowing the eyes to detect traffic instead of sweeping past it."
+  },
+  {
+    id: "exam-phys-6",
+    topic: "Operations",
+    prompt: "A pilot slept poorly and feels irritable before a complex flight. Which IMSAFE factor is most directly involved?",
+    choices: ["Illness", "Medication", "Fatigue", "Alcohol"],
+    correctIndex: 2,
+    explanation: "Poor sleep and irritability point to fatigue, which degrades attention, judgment, and reaction time."
+  },
+  {
+    id: "exam-maint-5",
+    topic: "Operations",
+    prompt: "Why should compass calibration be done only when needed and away from metal objects or power lines?",
+    choices: ["Nearby magnetic interference can teach the compass the wrong reference", "Calibration legally replaces Remote ID", "Power lines improve calibration accuracy", "Calibration is only for camera color balance"],
+    correctIndex: 0,
+    explanation: "Magnetic interference can corrupt calibration. Calibrate only when needed and in an area free of metal structures, vehicles, and power lines."
   }
 ];
 
