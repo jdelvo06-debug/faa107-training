@@ -9,9 +9,9 @@ Free, self-contained study platform for the FAA Part 107 remote pilot certificat
 ## What's Included
 
 - **13 modules** covering every ACS topic area — regulations, airspace, charts, weather, operations, ADM, physiology, maintenance, and career pathways
-- **Slide viewer** — keyboard-navigable slide decks with 100+ slides, FAA chart images, and source citations
+- **Slide viewer** — keyboard-navigable slide decks with 250+ slides, FAA chart images, and source citations
 - **Quiz engine** — multiple-choice knowledge checks per module with immediate feedback and explanations
-- **Practice exam** — 60 random questions drawn from a pool of 106, 120-minute timer, topic breakdown
+- **Practice exam** — 60 random questions drawn from a pool of 158, 120-minute timer, topic breakdown
 - **61 flashcards** — per-module decks with flip animation, shuffle, and known/unknown tracking
 - **Cram sheet** — one-page printable quick reference with Part 107 limits, airspace table, METAR/TAF decode, ACS breakdown
 - **7-day and 14-day study plans** — structured day-by-day roadmaps
@@ -74,7 +74,7 @@ Open [http://localhost:3000](http://localhost:3000).
 │   └── dashboard.tsx       # Dashboard summaries
 ├── lib/
 │   ├── course-data.ts      # All 13 modules' slide content
-│   ├── questions.ts        # Quiz + exam question bank (106 Qs)
+│   ├── questions.ts        # Quiz + exam question bank (158 Qs, 100 exam-* + 58 module)
 │   ├── flashcards.ts       # Flashcard data (61 cards)
 │   ├── types.ts            # TypeScript type definitions
 │   ├── utils.ts            # Shared utilities
