@@ -29,7 +29,7 @@ const sevenDayPlan = [
     title: "Airspace Deep Dive",
     modules: [3],
     focus: "Classes B through G, special use airspace, TFRs, NOTAMs, airspace authorization via LAANC.",
-    tip: "Draw the airspace pyramid from memory. Know Class G visibility minimums cold.",
+    tip: "Draw the airspace pyramid from memory. Keep Part 107's 3 SM visibility and cloud-clearance baseline separate from manned-aircraft VFR minima.",
   },
   {
     day: 3,

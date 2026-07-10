@@ -1,4 +1,5 @@
 import type { QuizQuestion } from "@/lib/types";
+import { ACS_TOPIC_WEIGHTS } from "@/lib/acs-weights";
 
 export const moduleQuestions: QuizQuestion[] = [
   {
@@ -402,9 +403,9 @@ export const moduleQuestions: QuizQuestion[] = [
     moduleId: "9",
     topic: "Operations",
     prompt: "What is the Part 107 rule regarding alcohol consumption before flight?",
-    choices: ["No alcohol within 4 hours", "No alcohol within 8 hours, and no flying while under the influence or impaired", "No alcohol within 12 hours", "Alcohol is permitted as long as BAC is below 0.04%"],
+    choices: ["No alcohol within 4 hours", "No alcohol within 8 hours; no operation while under the influence, using a safety-impairing drug, or at an alcohol concentration of 0.04 or greater", "No alcohol within 12 hours", "An alcohol concentration below 0.04 is the only restriction"],
     correctIndex: 1,
-    explanation: "Part 107: no alcohol within 8 hours before operating AND no operation while under the influence. BAC does not matter — impairment is the standard."
+    explanation: "Section 107.27 incorporates § 91.17. The independent prohibitions include operating within 8 hours of drinking, while under the influence, while using a drug that affects faculties contrary to safety, or with an alcohol concentration of 0.04 or greater."
   },
   {
     id: "m9-q2",
@@ -500,10 +501,10 @@ export const moduleQuestions: QuizQuestion[] = [
     id: "m11-q2",
     moduleId: "11",
     topic: "Operations",
-    prompt: "Which two topic areas combined make up the majority of the Part 107 exam?",
-    choices: ["Weather and Physiology", "Regulations and Airspace", "Loading and Maintenance", "Operations and CRM"],
-    correctIndex: 1,
-    explanation: "Regulations (30-40%) and Airspace/Charts (25-35%) together make up 55-75% of the exam. Master these first."
+    prompt: "Which ACS topic area has the largest percentage range on the Part 107 knowledge test?",
+    choices: ["Weather", "Regulations", "Operations", "Loading & Performance"],
+    correctIndex: 2,
+    explanation: `Operations has the largest current ACS range at ${ACS_TOPIC_WEIGHTS.operations}. Regulations and Airspace & Requirements are each ${ACS_TOPIC_WEIGHTS.regulations}.`
   },
   {
     id: "m11-q3",

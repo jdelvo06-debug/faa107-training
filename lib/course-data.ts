@@ -1,4 +1,5 @@
 import type { Module } from "@/lib/types";
+import { ACS_TOPIC_WEIGHTS, FAA_UAS_ACS_SOURCE } from "@/lib/acs-weights";
 
 const faaPilotSource = {
   label: "FAA: Become a Certificated Remote Pilot",
@@ -33,6 +34,26 @@ const faaTfrSource = {
 const faaSuasSource = {
   label: "FAA Aeronautical Chart User's Guide",
   href: "https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/aero_guide/"
+};
+
+const ecfrOperatingLimitsSource = {
+  label: "eCFR: 14 CFR § 107.51 Operating Limitations",
+  href: "https://www.ecfr.gov/current/title-14/part-107/section-107.51"
+};
+
+const ecfrPart107AlcoholSource = {
+  label: "eCFR: 14 CFR § 107.27 Alcohol or Drugs",
+  href: "https://www.ecfr.gov/current/title-14/part-107/section-107.27"
+};
+
+const ecfrPart91AlcoholSource = {
+  label: "eCFR: 14 CFR § 91.17 Alcohol or Drugs",
+  href: "https://www.ecfr.gov/current/title-14/part-91/section-91.17"
+};
+
+const faaSampleQuestionsSource = {
+  label: "FAA: UAG Sample Questions and Testing Supplement Guidance",
+  href: "https://www.faa.gov/sites/faa.gov/files/training_testing/testing/test_questions/uag_questions.pdf"
 };
 
 const moduleBlueprints = [
@@ -269,7 +290,8 @@ const moduleBlueprints = [
             type: "bullets",
             items: [
               "Part 107 operators register through FAADroneZone.",
-              "Registration is required for aircraft over 0.55 pounds.",
+              "All drones operated under Part 107 must be registered, regardless of weight.",
+              "The 0.55-pound threshold is a limited exception for recreational operations, not Part 107.",
               "Part 107 registration is tied to each aircraft, not one number for every drone.",
               "Registration is valid for three years."
             ]
@@ -282,8 +304,8 @@ const moduleBlueprints = [
         ],
         sources: [
           {
-            label: "FAA: How to Register Your Drone",
-            href: "https://www.faa.gov/uas/getting_started/register_drone"
+            label: "FAA: Drone Registration Requirements",
+            href: "https://www.faa.gov/faq/do-i-need-register-my-drone-and-if-so-how-do-i-register"
           }
         ]
       },
@@ -309,7 +331,7 @@ const moduleBlueprints = [
             text: "When an answer choice changes miles to feet, knots to mph, or AGL to MSL, slow down."
           }
         ],
-        sources: [faaWaiverSource]
+        sources: [ecfrOperatingLimitsSource]
       },
       {
         id: "m2-4",
@@ -360,12 +382,14 @@ const moduleBlueprints = [
             headers: ["Rule area", "Operational takeaway"],
             rows: [
               ["Alcohol", "Do not operate within 8 hours after consuming alcohol."],
-              ["Impairment", "Do not operate while under the influence or while impaired by any drug."],
+              ["Alcohol concentration", "Do not operate with an alcohol concentration of 0.04 or greater in blood or breath."],
+              ["Impairment", "Do not operate while under the influence of alcohol or while using any drug that affects faculties contrary to safety."],
               ["Medical fitness", "Do not fly when your physical or mental condition makes the operation unsafe."],
               ["Crew judgment", "Use IMSAFE-style self-checks before acting as remote PIC."]
             ]
           }
-        ]
+        ],
+        sources: [ecfrPart107AlcoholSource, ecfrPart91AlcoholSource]
       },
       {
         id: "m2-7",
@@ -393,10 +417,10 @@ const moduleBlueprints = [
             type: "table",
             headers: ["Category", "High-level idea"],
             rows: [
-              ["Category 1", "0.55 lb or less, no exposed rotating parts that cause lacerations."],
-              ["Category 2", "Performance-based eligibility for aircraft over 0.55 lb."],
-              ["Category 3", "More restrictive operations over people, with limits around open-air assemblies."],
-              ["Category 4", "Aircraft with an airworthiness certificate and approved limitations."]
+              ["Category 1", "0.55 lb or less including attachments; no exposed rotating parts that would lacerate skin. Sustained flight over open-air assemblies requires Remote ID compliance."],
+              ["Category 2", "Performance-qualified aircraft on an FAA-accepted declaration of compliance, with a Category 2 label and operating instructions. Sustained flight over open-air assemblies requires Remote ID compliance."],
+              ["Category 3", "Performance-qualified aircraft on an FAA-accepted declaration of compliance, with a Category 3 label and operating instructions. No operations over open-air assemblies; additional site or sustained-flight limits apply."],
+              ["Category 4", "Aircraft with a Part 21 airworthiness certificate, operated and maintained under approved limitations. Sustained flight over open-air assemblies requires Remote ID compliance."]
             ]
           },
           {
@@ -650,7 +674,7 @@ const moduleBlueprints = [
             rows: [
               ["ATC services", "None provided"],
               ["Part 107 authorization", "Not required"],
-              ["VFR weather minimums", "1 mile visibility, clear of clouds (day, below 1,200 AGL)"],
+              ["Part 107 weather minimums", "3 statute miles visibility; 500 ft below and 2,000 ft horizontally from clouds"],
               ["Upper limit", "Varies — typically to 700 ft or 1,200 ft AGL, then becomes Class E"],
               ["Best practice", "Still check for TFRs and NOTAMs before flying"]
             ]
@@ -661,7 +685,7 @@ const moduleBlueprints = [
             text: "Class G doesn't mean 'no rules.' Part 107 operating limits still apply: 400 ft AGL, VLOS, 3 miles visibility, right-of-way."
           }
         ],
-        sources: [faaAirspaceSource]
+        sources: [faaAirspaceSource, ecfrOperatingLimitsSource]
       },
       {
         id: "m3-7",
@@ -2185,8 +2209,8 @@ const moduleBlueprints = [
           },
           {
             type: "callout",
-            title: "Military to civilian",
-            text: "You've been doing CRM for years in the Air Force. The FAA's version uses the same principles. Lean on that experience."
+            title: "Transfer prior experience",
+            text: "If you have used formal crew coordination in another field, apply the same habits here: clear roles, standardized callouts, and a structured debrief."
           }
         ],
         sources: [faaCommercialSource]
@@ -2286,14 +2310,15 @@ const moduleBlueprints = [
         blocks: [
           {
             type: "paragraph",
-            text: "The FAA has zero tolerance for impaired operation. Part 107 rules are clear: no alcohol within 8 hours, no operation while under the influence of alcohol or any drug that affects faculties, and no operation if any physical or mental condition makes it unsafe."
+            text: "For alcohol and drug fitness, § 107.27 makes the remote PIC, person manipulating the controls, and visual observer subject to § 91.17. Its prohibitions are independent: no alcohol within 8 hours, no operation while under the influence, no drug use that affects faculties contrary to safety, and no alcohol concentration of 0.04 or greater in blood or breath."
           },
           {
             type: "table",
             headers: ["Substance rule", "Part 107 requirement"],
             rows: [
               ["Alcohol — time", "No consumption within 8 hours before operating"],
-              ["Alcohol — level", "No operation while under the influence (BAC does not matter — impairment is the standard)"],
+              ["Alcohol — influence", "No operation while under the influence, even after 8 hours"],
+              ["Alcohol — concentration", "No operation at 0.04 or greater in a blood or breath specimen"],
               ["Prescription drugs", "If the label says 'do not operate machinery,' do not fly"],
               ["OTC medication", "Even common medications (antihistamines, cold medicine) can impair"],
               ["Any substance", "If it affects your judgment, coordination, or alertness — you are grounded"]
@@ -2305,7 +2330,7 @@ const moduleBlueprints = [
             text: "Even if 8 hours have passed, if you still feel any effect from alcohol — you are not legal to fly. 'Hung over' is impaired."
           }
         ],
-        sources: [faaCommercialSource]
+        sources: [ecfrPart107AlcoholSource, ecfrPart91AlcoholSource]
       },
       {
         id: "m9-2",
@@ -2748,7 +2773,7 @@ const moduleBlueprints = [
               ["60 questions, 120 minutes", "You have 2 minutes per question. That is plenty if you are prepared."],
               ["70% passing score", "You can miss 18 questions and still pass. But train to 85%+."],
               ["Single subject areas tested", "Airspace, weather, regulations, operations, loading/performance"],
-              ["No reference materials allowed", "Everything must be from memory — no phone, no notes"],
+              ["FAA testing supplement", "The proctor provides the supplement book used for figure questions; UAG figure references use FAA-CT-8080-2H graphics. Personal written or electronic materials are not allowed, and the proctor makes the final determination on test aids."],
               ["Photo ID required", "Government-issued photo ID at check-in. No exceptions."]
             ]
           },
@@ -2758,7 +2783,7 @@ const moduleBlueprints = [
             text: "Pass the real test on the first attempt. Re-tests cost time and money. This practice exam module trains you to walk in ready."
           }
         ],
-        sources: [faaPilotSource]
+        sources: [faaPilotSource, FAA_UAS_ACS_SOURCE, faaSampleQuestionsSource]
       },
       {
         id: "m11-2",
@@ -2773,20 +2798,20 @@ const moduleBlueprints = [
             type: "table",
             headers: ["Topic area", "Approximate weight", "Priority"],
             rows: [
-              ["Regulations", "30-40%", "HIGHEST — know Part 107 rules cold"],
-              ["Airspace & Charts", "25-35%", "HIGH — sectional reading is heavily tested"],
-              ["Weather", "15-20%", "MEDIUM-HIGH — METARs, TAFs, density altitude"],
-              ["Operations", "10-15%", "MEDIUM — CRM, emergencies, decision-making"],
-              ["Loading & Performance", "5-10%", "LOWER — but easy points if you study"]
+              ["Regulations", ACS_TOPIC_WEIGHTS.regulations, "Part 107 rules, privileges, and limitations"],
+              ["Airspace & Requirements", ACS_TOPIC_WEIGHTS.airspace, "Airspace, authorization, and flight restrictions"],
+              ["Weather", ACS_TOPIC_WEIGHTS.weather, "Sources, METARs, TAFs, and effects on performance"],
+              ["Loading & Performance", ACS_TOPIC_WEIGHTS.loadingPerformance, "Aircraft loading and performance"],
+              ["Operations", ACS_TOPIC_WEIGHTS.operations, "Largest range: procedures, ADM, airports, and maintenance"]
             ]
           },
           {
             type: "callout",
             title: "Study strategy",
-            text: "Regulations + Airspace = 55-75% of the test. If you master those two, you are most of the way to passing before you touch Weather or Operations."
+            text: "Operations has the largest current ACS range. Use all five ranges to plan study time, then use practice results to target your own weak areas."
           }
         ],
-        sources: [faaPilotSource]
+        sources: [FAA_UAS_ACS_SOURCE]
       },
       {
         id: "m11-3",
@@ -3173,14 +3198,9 @@ const moduleBlueprints = [
               ["Infrastructure Inspection", "Cell towers, bridges, power lines, wind turbines, pipelines"],
               ["Real Estate & Marketing", "Property photos, video tours, 3D walkthroughs, community aerials"],
               ["Agriculture", "Crop health (NDVI), spraying, livestock monitoring, drainage mapping"],
-              ["Public Safety", "Search and rescue, fire scene documentation, accident reconstruction", "LE/MIL background preferred"],
+              ["Public Safety", "Search and rescue, fire scene documentation, accident reconstruction"],
               ["Defense & Government", "C-UAS, TTP development, test range operations, ISR support"]
             ]
-          },
-          {
-            type: "callout",
-            title: "Your advantage",
-            text: "Your Air Force C-UAS experience and TS/SCI clearance put you in a small, high-value talent pool. Defense contractors pay premiums for cleared, experienced UAS professionals."
           }
         ],
         sources: [faaCommercialSource]
@@ -3206,8 +3226,8 @@ const moduleBlueprints = [
           },
           {
             type: "callout",
-            title: "Military transition tip",
-            text: "SkillBridge, DoD SkillBridge, and veteran small business resources (SBA, Bunker Labs) can support your transition. You already know how to navigate government systems — use that."
+            title: "Professional-development resources",
+            text: "Small-business and workforce-development resources can help with business planning, mentoring, and local networking. Evaluate each program against your own goals."
           }
         ],
         sources: [faaCommercialSource]
@@ -3223,19 +3243,14 @@ const moduleBlueprints = [
           },
           {
             type: "table",
-            headers: ["Credential", "What it adds", "Relevance for you"],
+            headers: ["Credential", "What it adds"],
             rows: [
-              ["FAA Part 61 (manned pilot)", "Deeper aviation knowledge, credibility", "Optional but valuable if you pursue aviation further"],
-              ["FCC HAM Radio License", "Legal operation of certain frequencies and equipment", "You're already pursuing this"],
-              ["PMP Certification", "Project management credibility", "You have this — lean on it for program manager roles"],
-              ["Thermographer Level 1", "Infrared inspection — solar, roofing, electrical", "High-demand niche with better margins"],
-              ["FAA Part 107 recurrent", "Must be current — renew every 24 months", "Required. Keep it current."]
+              ["FAA Part 61 (manned pilot)", "Deeper aviation knowledge and credibility"],
+              ["FCC amateur radio license", "Legal operation on amateur-radio frequencies when applicable"],
+              ["Project management certification", "Project planning and delivery credibility"],
+              ["Thermography certification", "Infrared inspection skills for solar, roofing, and electrical work"],
+              ["FAA Part 107 recurrent", "Keeps aeronautical knowledge current"]
             ]
-          },
-          {
-            type: "callout",
-            title: "Stack what you already have",
-            text: "TS/SCI + PMP + Part 107 + military C-UAS experience = a resume very few people can match. Do not undersell this."
           }
         ],
         sources: [faaCommercialSource]
@@ -3255,14 +3270,14 @@ const moduleBlueprints = [
               "Drone-specific job boards: DroneBase, DroneDeploy, PrecisionHawk, FlyGuys.",
               "General platforms: Upwork (drone photography/video), Indeed/LinkedIn (search 'UAS' and 'Part 107').",
               "Government contracting: SAM.gov for federal contracts. State and local RFPs for infrastructure work.",
-              "Networking: Your Air Force contacts are a goldmine. Defense contractors hire through referrals constantly.",
+              "Networking: Build relationships through local aviation groups, industry events, and professional associations.",
               "Direct outreach: Contact construction companies, real estate agencies, and engineering firms. Most have never considered hiring a drone pilot. Show them what you can do."
             ]
           },
           {
             type: "callout",
-            title: "Defense transition",
-            text: "ClearanceJobs.com, USAJobs, and direct applications to SAIC, Leidos, Booz Allen, Amentum, and CACI should be in your pipeline. They need what you have."
+            title: "Search deliberately",
+            text: "Use job boards, USAJobs, direct company applications, and referrals as separate channels. Track applications and follow-up dates so opportunities do not get lost."
           }
         ],
         sources: [faaCommercialSource]
@@ -3284,7 +3299,7 @@ const moduleBlueprints = [
               ["Project case studies", "3-5 projects: what the client needed, how you executed, the result"],
               ["Before/after examples", "Mapping outputs, inspection findings, progress comparisons"],
               ["Equipment list", "What you fly and what you can deliver — builds trust with technical clients"],
-              ["Credentials section", "Part 107, PMP, clearance level (to the extent shareable), insurance coverage"]
+              ["Credentials section", "Part 107, relevant technical credentials, and insurance coverage"]
             ]
           },
           {
@@ -3310,14 +3325,14 @@ const moduleBlueprints = [
               "Never quote an hourly 'flying rate.' Quote a project rate that includes planning, travel, flight time, editing, and deliverables.",
               "Typical real estate: $200-400 per property. Construction progress: $500-1,500/month retainer.",
               "Inspection work: $150-250/hour on-site. Mapping: $100-300/acre depending on resolution and deliverables.",
-              "Defense contracting: $75-150/hour for cleared UAS specialists. Program management roles: $120-200K/year salary.",
+              "Specialized government and technical work varies widely by scope, contract terms, and required deliverables.",
               "Always have a contract. Scope creep is real — the contract defines what is and is not included."
             ]
           },
           {
             type: "callout",
-            title: "Know your worth",
-            text: "You are not 'a guy with a drone.' You are a TS/SCI-cleared, PMP-certified, combat-tested C-UAS program manager who also flies. Price accordingly."
+            title: "Price the complete service",
+            text: "Base pricing on scope, risk, planning, equipment, travel, processing, and deliverables—not flight time alone."
           }
         ],
         sources: [faaCommercialSource]
@@ -3325,23 +3340,22 @@ const moduleBlueprints = [
       {
         id: "m13-7",
         kicker: "Next Steps",
-        title: "Your Roadmap — From Here to January 2027 and Beyond",
+        title: "A Practical Professional-Development Roadmap",
         blocks: [
           {
             type: "diagram",
-            title: "Transition roadmap",
+            title: "Build momentum in stages",
             items: [
               "Now: Complete this training program. Score 85%+ on practice exams. Schedule your Part 107 test.",
               "Next 30 days: Pass the Part 107 exam. Build your portfolio website. Start networking on LinkedIn.",
               "Next 90 days: Apply to defense contractor UAS/program manager roles. Attend at least one industry event or UAS conference.",
-              "By terminal leave (Nov 2026): Have a signed job offer or a pipeline of contracts. Know exactly what comes next.",
-              "31 Jan 2027: Retire with a plan in hand and a career you are excited about."
+              "Ongoing: Track applications or client leads, maintain currency, and add portfolio examples from completed work."
             ]
           },
           {
             type: "callout",
-            title: "One mission at a time",
-            text: "You have planned and executed harder missions than this. Your retirement transition is just another operation — plan it, brief it, execute it, and debrief it. You've got this."
+            title: "Review and adjust",
+            text: "Set a regular review date, measure progress, and choose the next concrete action based on current results."
           }
         ],
         sources: [faaCommercialSource]

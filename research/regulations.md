@@ -45,18 +45,26 @@
 | V | Operations | 35–45% |
 
 ### Key FAA Resources (Official PDFs)
-- Airman Certification Standards (ACS) for UAS: faa.gov/training_testing/testing/acs/uas_acs.pdf
-- Remote Pilot Study Guide: faa.gov/regulations_policies/handbooks_manuals/aviation/remote_pilot_study_guide.pdf
-- Sample Questions: faa.gov/training_testing/testing/test_questions/uag_questions.pdf
+- Airman Certification Standards (ACS) for UAS: https://www.faa.gov/sites/faa.gov/files/training_testing/testing/acs/uas_acs.pdf
+- Remote Pilot Study Guide: https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/remote_pilot_study_guide.pdf
+- Sample Questions and testing-supplement guidance: https://www.faa.gov/sites/faa.gov/files/training_testing/testing/test_questions/uag_questions.pdf
 
 ### Key Part 107 Operating Rules (from 14 CFR)
 - **Max altitude:** 400 ft AGL (or within 400 ft of structure)
 - **Max speed:** 100 mph (87 knots)
 - **VLOS:** Must maintain visual line of sight
 - **Right of way:** Yield to all manned aircraft
+- **Weather minima:** At least 3 statute miles visibility from the control station; at least 500 feet below and 2,000 feet horizontally from clouds (14 CFR § 107.51)
 - **Night ops:** Anti-collision lights required, visible 3 SM
-- **Alcohol:** 8 hours bottle to throttle
+- **Alcohol/drugs:** Under §§ 107.27 and 91.17: no alcohol within 8 hours; no operation while under the influence; no safety-impairing drug use; and no alcohol concentration of 0.04 or greater in blood or breath
 - **Accident reporting:** Within 10 days if serious injury or $500+ property damage
-- **Registration:** Required if > 0.55 lbs
+- **Registration:** All drones operated under Part 107 must be registered; the 0.55-pound exception applies only to limited recreational operations
 - **Airspace:** Class B/C/D/surface E require ATC authorization (LAANC)
 - **Remote ID:** Required for most operations
+
+### Current Official Rule Sources
+- Operating limitations: https://www.ecfr.gov/current/title-14/part-107/section-107.51
+- Part 107 alcohol/drug incorporation: https://www.ecfr.gov/current/title-14/part-107/section-107.27
+- Alcohol/drug prohibitions: https://www.ecfr.gov/current/title-14/part-91/section-91.17
+- Registration requirements: https://www.faa.gov/faq/do-i-need-register-my-drone-and-if-so-how-do-i-register
+- Operations over people: https://www.faa.gov/uas/commercial_operators/operations_over_people

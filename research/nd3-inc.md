@@ -31,10 +31,6 @@
 - Drone pilot training → career pathways
 - Partnered with QCC Services for inspection/drone services
 
-## Why This Matters for Jeremy
-- They're a small SDVOSB — Jeremy's veteran status resonates
-- They do C-UAS — his AFCENT C-UAS program management experience is directly relevant
-- Their training is TRADOC-approved — Jeremy's military instructor background fits
+## Potential Product Fit
 - They're small enough that a polished Part 107 training platform demo would genuinely impress
 - Their current course is in-person only — a digital/online component fills a gap
-- The SkillBridge opportunity is a natural transition from active duty to this company

@@ -1,4 +1,5 @@
 import type { Flashcard } from "@/lib/types";
+import { ACS_TOPIC_WEIGHTS } from "@/lib/acs-weights";
 
 export const flashcards: Flashcard[] = [
   {
@@ -335,7 +336,7 @@ export const flashcards: Flashcard[] = [
     moduleId: "9",
     topic: "Operations",
     front: "Part 107 alcohol rule",
-    back: "No alcohol within 8 hours before flight. No operation while under the influence or impaired. BAC number does not matter — impairment is the standard."
+    back: "No alcohol within 8 hours before flight. No operation while under the influence, while using a drug that affects faculties contrary to safety, or with an alcohol concentration of 0.04 or greater in blood or breath."
   },
   {
     id: "fc-9-empty-myopia",
@@ -419,7 +420,7 @@ export const flashcards: Flashcard[] = [
     moduleId: "11",
     topic: "Operations",
     front: "Exam topic weighting",
-    back: "Regulations 30-40%, Airspace 25-35%, Weather 15-20%, Operations 10-15%, Loading & Performance 5-10%. Focus on the big two first."
+    back: `Current ACS ranges: Regulations ${ACS_TOPIC_WEIGHTS.regulations}, Airspace & Requirements ${ACS_TOPIC_WEIGHTS.airspace}, Weather ${ACS_TOPIC_WEIGHTS.weather}, Loading & Performance ${ACS_TOPIC_WEIGHTS.loadingPerformance}, Operations ${ACS_TOPIC_WEIGHTS.operations}.`
   },
   {
     id: "fc-11-exam-traps",

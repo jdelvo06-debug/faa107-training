@@ -1,3 +1,5 @@
+import { ACS_TOPIC_WEIGHTS } from "@/lib/acs-weights";
+
 export default function CramSheetPage() {
   return (
     <div className="print:bg-white print:text-black mx-auto max-w-4xl grid gap-8 print:gap-4">
@@ -25,12 +27,11 @@ export default function CramSheetPage() {
             ["Max speed", "100 mph (87 knots)"],
             ["VLOS", "Must maintain visual line of sight"],
             ["Right of way", "Yield to all manned aircraft"],
-            ["Alcohol", "8 hours bottle to throttle"],
-            ["Drugs", "No OTC that affects safety"],
+            ["Alcohol", "No use within 8 hours; no operation while under the influence; concentration must remain below 0.04"],
+            ["Drugs", "No drug that affects faculties contrary to safety"],
             ["Max weight", "55 lbs (including payload)"],
-            ["Registration", "Required if &gt; 0.55 lbs"],
+            ["Registration", "All drones operated under Part 107 must be registered"],
             ["Night ops", "Anti-collision light visible 3 SM"],
-            ["Over people", "Categories 1-4 (no exposed rotating parts for sustained flight over open-air)"],
             ["Accident report", "Within 10 days — serious injury or $500+ damage"],
             ["Remote ID", "Required for most operations"],
           ].map(([label, value]) => (
@@ -40,6 +41,24 @@ export default function CramSheetPage() {
             </div>
           ))}
         </div>
+
+        <h3 className="font-semibold text-sm mt-5 mb-2">Operations Over People — Category Snapshot</h3>
+        <div className="grid gap-2 text-xs">
+          {[
+            ["Category 1", "0.55 lb or less including attachments; no exposed rotating parts that would lacerate skin. Sustained flight over open-air assemblies requires Remote ID compliance."],
+            ["Category 2", "Aircraft is listed on an FAA-accepted declaration of compliance, has a Category 2 label and operating instructions, and meets the performance standard. Sustained flight over open-air assemblies requires Remote ID compliance."],
+            ["Category 3", "Aircraft is listed on an FAA-accepted declaration of compliance, has a Category 3 label and operating instructions; it must not cause injury at or above 25 foot-pounds of kinetic energy on impact, have exposed rotating parts that could lacerate skin, or have a safety defect or condition that creates an undue hazard. No open-air assemblies; closed/restricted-site notice or no sustained flight over unprotected nonparticipants."],
+            ["Category 4", "Part 21 airworthiness certificate; follow approved operating limitations and maintenance requirements. Sustained flight over open-air assemblies requires Remote ID compliance."],
+          ].map(([category, rule]) => (
+            <div key={category}>
+              <span className="font-semibold">{category}:</span>{" "}
+              <span className="text-muted-foreground print:text-gray-700">{rule}</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground print:text-gray-700">
+          Source: <a className="underline" href="https://www.faa.gov/uas/commercial_operators/operations_over_people">FAA Operations Over People</a>
+        </p>
       </section>
 
       {/* SECTION 2 — Airspace Quick Reference */}
@@ -131,11 +150,11 @@ export default function CramSheetPage() {
               <div>Area</div><div>Topic</div><div>% of Test</div><div>Est. Questions</div>
             </div>
             {[
-              ["I", "Regulations", "15–25%", "9-15"],
-              ["II", "Airspace &amp; Operating Requirements", "15–25%", "9-15"],
-              ["III", "Weather", "11–16%", "7-10"],
-              ["IV", "Loading &amp; Performance", "7–11%", "4-7"],
-              ["V", "Operations", "35–45%", "21-27"],
+              ["I", "Regulations", ACS_TOPIC_WEIGHTS.regulations, "9-15"],
+              ["II", "Airspace &amp; Operating Requirements", ACS_TOPIC_WEIGHTS.airspace, "9-15"],
+              ["III", "Weather", ACS_TOPIC_WEIGHTS.weather, "7-10"],
+              ["IV", "Loading &amp; Performance", ACS_TOPIC_WEIGHTS.loadingPerformance, "4-7"],
+              ["V", "Operations", ACS_TOPIC_WEIGHTS.operations, "21-27"],
             ].map(([area, topic, pct, qs]) => (
               <div key={area} className="grid grid-cols-4 border-b py-1.5 print:border-gray-400">
                 <div className="font-bold">{area}</div>
@@ -165,18 +184,15 @@ export default function CramSheetPage() {
         </h2>
         <div className="grid gap-2 sm:grid-cols-2 text-sm">
           <div>
-            <span className="font-semibold">Minimum visibility (day):</span> 3 SM
+            <span className="font-semibold">Part 107 minimum visibility:</span> 3 SM from the control station
           </div>
           <div>
-            <span className="font-semibold">Cloud clearance (basic):</span> 500 ft below, 2,000 ft horizontal, stay clear
-          </div>
-          <div>
-            <span className="font-semibold">Class G day (&lt;1,200 ft):</span> 1 SM visibility, clear of clouds
-          </div>
-          <div>
-            <span className="font-semibold">Class G night:</span> 3 SM, 500 below / 1,000 above / 2,000 horizontal
+            <span className="font-semibold">Part 107 cloud distance:</span> At least 500 ft below and 2,000 ft horizontally
           </div>
         </div>
+        <p className="mt-3 text-xs text-muted-foreground print:text-gray-700">
+          Source: <a className="underline" href="https://www.ecfr.gov/current/title-14/part-107/section-107.51">14 CFR § 107.51</a>
+        </p>
 
         <h3 className="font-semibold text-sm mt-4 mb-2">Chart Symbols to Know</h3>
         <div className="grid gap-1 text-sm">
