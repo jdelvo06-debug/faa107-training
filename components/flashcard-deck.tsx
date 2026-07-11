@@ -6,13 +6,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { addActivity, saveFlashcardProgress, useProgress } from "@/lib/progress-storage";
+import { flashcardActivityHref } from "@/lib/learning-routes";
 import type { Flashcard } from "@/lib/types";
 
 function shuffled<T>(items: T[]) {
   return [...items].sort(() => Math.random() - 0.5);
 }
 
-export function FlashcardDeck({ moduleId, title, cards }: { moduleId: string; title: string; cards: Flashcard[] }) {
+export function FlashcardDeck({
+  moduleId,
+  title,
+  cards,
+  activityHref
+}: {
+  moduleId: string;
+  title: string;
+  cards: Flashcard[];
+  activityHref?: string;
+}) {
   const progress = useProgress();
   const saved = progress.flashcards[moduleId] ?? { known: [], unknown: [] };
   const [deck, setDeck] = useState(cards);
@@ -47,7 +58,7 @@ export function FlashcardDeck({ moduleId, title, cards }: { moduleId: string; ti
     saveFlashcardProgress(moduleId, next);
     addActivity({
       label: `Reviewed flashcard: ${card.front}`,
-      href: `/modules/${moduleId}/flashcards`
+      href: flashcardActivityHref(moduleId, activityHref)
     });
     setFlipped(false);
     setIndex((current) => (current + 1) % deck.length);

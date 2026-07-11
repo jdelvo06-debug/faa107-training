@@ -5,11 +5,18 @@ import type {
   ExamAttempt,
   FlashcardProgress,
   ProgressState,
+  QuizQuestion,
   QuizAttempt,
   RecentActivity
 } from "@/lib/types";
+import {
+  restoreActiveExamSession,
+  type ActiveExamSession,
+  type RestoredExamSession
+} from "@/lib/exam-session";
 
 const STORAGE_KEY = "faa107-progress-v1";
+const ACTIVE_EXAM_KEY = "faa107-active-exam-v1";
 
 export const emptyProgress: ProgressState = {
   version: 1,
@@ -133,6 +140,99 @@ export function saveExamAttempt(attempt: Omit<ExamAttempt, "id" | "completedAt">
       ...current.examAttempts
     ].slice(0, 10)
   }));
+}
+
+export function saveActiveExamSession(session: ActiveExamSession) {
+  if (!isBrowser()) {
+    return false;
+  }
+
+  try {
+    window.localStorage.setItem(ACTIVE_EXAM_KEY, JSON.stringify(session));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function getActiveExamSession(
+  questions: QuizQuestion[],
+  now = Date.now()
+): RestoredExamSession | null {
+  if (!isBrowser()) {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(ACTIVE_EXAM_KEY);
+    if (!raw) {
+      return null;
+    }
+    const restored = restoreActiveExamSession(JSON.parse(raw), questions, now);
+    if (!restored) {
+      clearActiveExamSession();
+    }
+    return restored;
+  } catch {
+    clearActiveExamSession();
+    return null;
+  }
+}
+
+export function clearActiveExamSession() {
+  if (!isBrowser()) {
+    return false;
+  }
+
+  try {
+    window.localStorage.removeItem(ACTIVE_EXAM_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export interface ExamCompletionResult {
+  persisted: boolean;
+  activeSessionCleared: boolean;
+}
+
+export function completeExamAttempt(
+  attempt: Omit<ExamAttempt, "id" | "completedAt">,
+): ExamCompletionResult {
+  const completedAt = new Date().toISOString();
+  let persisted = false;
+
+  try {
+    updateProgress((current) => ({
+      ...current,
+      examAttempts: [
+        {
+          ...attempt,
+          id: crypto.randomUUID(),
+          completedAt
+        },
+        ...current.examAttempts
+      ].slice(0, 10),
+      recentActivity: [
+        {
+          id: crypto.randomUUID(),
+          at: completedAt,
+          label: `Completed practice exam: ${attempt.score}/${attempt.total}`,
+          href: "/exam/results"
+        },
+        ...current.recentActivity
+      ].slice(0, 8)
+    }));
+    persisted = true;
+  } catch {
+    persisted = false;
+  }
+
+  return {
+    persisted,
+    activeSessionCleared: clearActiveExamSession()
+  };
 }
 
 export function saveFlashcardProgress(moduleId: string, progress: FlashcardProgress) {

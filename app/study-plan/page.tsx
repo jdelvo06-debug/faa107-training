@@ -1,4 +1,6 @@
 import { CheckCircle, Clock, BookOpen } from "lucide-react";
+import Link from "next/link";
+import { moduleHref } from "@/lib/learning-routes";
 
 const modules = [
   { num: 1, title: "Welcome & Getting Started" },
@@ -115,14 +117,14 @@ export default function StudyPlanPage() {
                 <p className="text-sm text-muted-foreground mt-1">{day.focus}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {day.modules.map((m) => (
-                    <a
+                    <Link
                       key={m}
-                      href={`/modules/module-${m}`}
+                      href={moduleHref(m)}
                       className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium hover:bg-accent transition-colors"
                     >
                       <BookOpen className="h-3 w-3" />
                       M{m}: {modules[m - 1].title}
-                    </a>
+                    </Link>
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-primary font-medium">
@@ -154,13 +156,13 @@ export default function StudyPlanPage() {
                 <p className="text-xs text-muted-foreground mt-0.5">{day.focus}</p>
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {day.modules.map((m) => (
-                    <a
+                    <Link
                       key={m}
-                      href={`/modules/module-${m}`}
+                      href={moduleHref(m)}
                       className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium hover:bg-accent transition-colors"
                     >
                       M{m}
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -175,7 +177,7 @@ export default function StudyPlanPage() {
         <ul className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
           <li>• Take the practice exam <span className="font-semibold text-foreground">every other day</span> — it&apos;s the fastest way to find weak spots.</li>
           <li>• Use flashcards for <span className="font-semibold text-foreground">5-minute bursts</span> — waiting in line, coffee break, etc.</li>
-          <li>• Print the <a href="/cram-sheet" className="underline hover:text-primary">cram sheet</a> and keep it on your desk.</li>
+          <li>• Print the <Link href="/cram-sheet" className="underline hover:text-primary">cram sheet</Link> and keep it on your desk.</li>
           <li>• Decode <span className="font-semibold text-foreground">real METARs</span> at AviationWeather.gov — it sticks better than theory.</li>
           <li>• Open a <span className="font-semibold text-foreground">live sectional chart</span> (SkyVector.com) while studying Module 4.</li>
           <li>• The official FAA study guide is free — use it as backup reference.</li>
