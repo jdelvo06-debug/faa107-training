@@ -76,6 +76,26 @@ export interface QuizQuestion {
   explanation: string;
 }
 
+export type QuizMode = "study" | "assessment";
+
+export type ExamVariant = "faa_timed" | "practice_drill";
+
+export interface PresentationMetadata {
+  variant: ExamVariant;
+  seed: number;
+  sourceChoiceIndexes: number[];
+}
+
+export interface PresentationQuestion {
+  sourceQuestionId: string;
+  prompt: string;
+  choices: string[];
+  correctIndex: number;
+  topic: TopicArea;
+  explanation: string;
+  presentation: PresentationMetadata;
+}
+
 export interface Flashcard {
   id: string;
   moduleId: string;
