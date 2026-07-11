@@ -137,3 +137,26 @@
     transform: translateY(0);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .runway-grid.animate-drift {
+    animation: none !important;
+  }
+  .hero-glow {
+    animation: none !important;
+  }
+  .fade-up {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .fade-up-delay-1,
+  .fade-up-delay-2,
+  .fade-up-delay-3,
+  .fade-up-delay-4 {
+    animation-delay: 0s !important;
+  }
+}

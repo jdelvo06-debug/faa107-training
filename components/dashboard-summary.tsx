@@ -55,14 +55,14 @@ export function DashboardSummary() {
                 <span>Modules completed</span>
                 <span className="stat-mono">{completedModules}/13</span>
               </div>
-              <Progress value={Math.round((completedModules / modules.length) * 100)} />
+              <Progress value={Math.round((completedModules / modules.length) * 100)} aria-label="Modules completed progress" />
             </div>
             <div>
               <div className="mb-2 flex justify-between text-sm">
                 <span>Flashcards reviewed</span>
                 <span className="stat-mono">{flashcardTotals.reviewed}/{flashcardTotals.total}</span>
               </div>
-              <Progress value={Math.round((flashcardTotals.reviewed / flashcardTotals.total) * 100)} />
+              <Progress value={Math.round((flashcardTotals.reviewed / flashcardTotals.total) * 100)} aria-label="Flashcards reviewed progress" />
             </div>
             <div className="rounded-lg border border-white/10 p-4">
               <p className="text-sm text-muted-foreground">Latest exam</p>
@@ -102,7 +102,7 @@ export function DashboardSummary() {
                     <span>{area.topic}</span>
                     <span className="stat-mono">{area.percent}%</span>
                   </div>
-                  <Progress value={area.percent} />
+                  <Progress value={area.percent} aria-label={`Weak area progress for ${area.topic}`} />
                 </div>
               ))
             ) : (

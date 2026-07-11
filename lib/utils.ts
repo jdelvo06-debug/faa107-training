@@ -21,3 +21,8 @@ export function topicScores(questions: QuizQuestion[], answers: Record<string, n
   }
   return totals;
 }
+
+export function isFocusContained(container: { contains(node: any): boolean } | null, target: any): boolean {
+  if (!container || !target) return false;
+  return container.contains(target);
+}

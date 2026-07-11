@@ -135,7 +135,7 @@ export function QuizEngine({
             <CardTitle className="text-3xl text-white">{moduleTitle} Quiz Results</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-5">
-            <div>
+            <div role="status" aria-live="polite">
               <p className="text-5xl font-bold text-primary">{percent}%</p>
               <p className="mt-2 text-slate-300">You answered {score} of {questions.length} correctly.</p>
             </div>
@@ -190,36 +190,40 @@ export function QuizEngine({
           className="bg-white/10"
           aria-label={`Question ${index + 1} of ${questions.length}`}
         />
-        <CardTitle className="pt-4 text-2xl leading-tight text-white">{question.prompt}</CardTitle>
+        <CardTitle id={`question-prompt-${question.id}`} className="pt-4 text-2xl leading-tight text-white">{question.prompt}</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <div role="group" aria-label={`Answers for question ${index + 1}`} className="grid gap-3">
-          {question.choices.map((choice, choiceIndex) => {
-            const selected = answers[question.id] === choiceIndex;
-            const correct = choiceIndex === question.correctIndex;
-            const reveal = policy.feedback === "immediate" && answered;
-            return (
-              <button
-                key={choice}
-                type="button"
-                aria-pressed={selected}
-                disabled={!policy.answersMayChange && answered}
-                onClick={() => selectAnswer(choiceIndex)}
-                className={cn(
-                  "flex min-h-14 items-center justify-between gap-3 rounded-lg border p-4 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-80",
-                  selected && !reveal && "border-primary bg-primary/15 text-white",
-                  selected && reveal && correct && "border-emerald-300 bg-emerald-300/15 text-emerald-50",
-                  selected && reveal && !correct && "border-red-300 bg-red-300/15 text-red-50",
-                  !selected && "border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.07]",
-                )}
-              >
-                <span>{choice}</span>
-                {selected && reveal && correct ? <CheckCircle2 className="h-5 w-5" aria-hidden="true" /> : null}
-                {selected && reveal && !correct ? <XCircle className="h-5 w-5" aria-hidden="true" /> : null}
-              </button>
-            );
-          })}
-        </div>
+        <fieldset aria-labelledby={`question-prompt-${question.id}`} className="m-0 min-w-0 border-0 p-0 grid gap-3">
+          <legend className="sr-only">Answer choices</legend>
+          <div role="radiogroup" aria-labelledby={`question-prompt-${question.id}`} className="grid gap-3">
+            {question.choices.map((choice, choiceIndex) => {
+              const selected = answers[question.id] === choiceIndex;
+              const correct = choiceIndex === question.correctIndex;
+              const reveal = policy.feedback === "immediate" && answered;
+              return (
+                <button
+                  key={choice}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  disabled={!policy.answersMayChange && answered}
+                  onClick={() => selectAnswer(choiceIndex)}
+                  className={cn(
+                    "flex min-h-14 items-center justify-between gap-3 rounded-lg border p-4 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-80",
+                    selected && !reveal && "border-primary bg-primary/15 text-white",
+                    selected && reveal && correct && "border-emerald-300 bg-emerald-300/15 text-emerald-50",
+                    selected && reveal && !correct && "border-red-300 bg-red-300/15 text-red-50",
+                    !selected && "border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.07]",
+                  )}
+                >
+                  <span>{choice}</span>
+                  {selected && reveal && correct ? <CheckCircle2 className="h-5 w-5" aria-hidden="true" /> : null}
+                  {selected && reveal && !correct ? <XCircle className="h-5 w-5" aria-hidden="true" /> : null}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
 
         <div aria-live="polite">
           {policy.feedback === "immediate" && answered ? (

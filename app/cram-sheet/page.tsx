@@ -2,7 +2,7 @@ import { ACS_TOPIC_WEIGHTS } from "@/lib/acs-weights";
 
 export default function CramSheetPage() {
   return (
-    <div className="print:bg-white print:text-black mx-auto max-w-4xl grid gap-8 print:gap-4">
+    <div className="print:bg-white print:text-black mx-auto max-w-4xl grid gap-8 print:gap-4 px-4 sm:px-0">
       <div className="print:hidden">
         <h1 className="text-4xl font-bold tracking-normal">Part 107 Cram Sheet</h1>
         <p className="mt-2 max-w-3xl text-muted-foreground">
@@ -67,7 +67,10 @@ export default function CramSheetPage() {
           Airspace Quick Reference
         </h2>
         <div className="overflow-x-auto">
-          <div className="min-w-[600px] text-sm">
+          <div className="min-w-0 sm:min-w-[600px] text-sm">
+            <div className="hidden sm:grid sm:grid-cols-4 font-bold border-b pb-1 print:border-gray-400">
+              <div>Class</div><div>Description</div><div>Chart Color</div><div>Rule</div>
+            </div>
             {[
               ["B", "Busy (30+ NM)", "Solid blue", "Clearance (ATC)"],
               ["C", "Moderate (10 NM radius)", "Solid magenta", "Authorization (LAANC)"],
@@ -75,11 +78,11 @@ export default function CramSheetPage() {
               ["E", "Controlled (not B/C/D)", "Dashed magenta / fuzzy blue", "None below floor unless surface"],
               ["G", "Uncontrolled", "Not depicted", "None"],
             ].map(([cls, desc, chart, rule]) => (
-              <div key={cls} className="grid grid-cols-4 border-b py-1.5 print:border-gray-400">
+              <div key={cls} className="grid grid-cols-1 sm:grid-cols-4 border-b py-2 sm:py-1.5 print:border-gray-400 gap-1 sm:gap-0">
                 <div className="font-bold">Class {cls}</div>
-                <div>{desc}</div>
-                <div className="text-muted-foreground print:text-gray-700">{chart}</div>
-                <div className="font-semibold">{rule}</div>
+                <div><span className="sm:hidden text-muted-foreground">Description: </span>{desc}</div>
+                <div><span className="sm:hidden text-muted-foreground">Chart: </span>{chart}</div>
+                <div className="font-semibold"><span className="sm:hidden text-muted-foreground">Rule: </span>{rule}</div>
               </div>
             ))}
           </div>
@@ -102,7 +105,7 @@ export default function CramSheetPage() {
         </h2>
 
         <h3 className="font-semibold text-sm mb-2">METAR Decode</h3>
-        <div className="mb-3 font-mono text-xs bg-muted p-2 rounded print:bg-gray-100">
+        <div className="mb-3 font-mono text-xs bg-muted p-2 rounded print:bg-gray-100 break-words whitespace-pre-wrap">
           METAR KATL 161552Z 31012G18KT 10SM FEW030 BKN050 22/14 A3012 RMK AO2
         </div>
         <div className="grid gap-1 text-xs text-muted-foreground print:text-gray-700 mb-4">
@@ -112,7 +115,7 @@ export default function CramSheetPage() {
         </div>
 
         <h3 className="font-semibold text-sm mb-2">TAF Decode</h3>
-        <div className="mb-3 font-mono text-xs bg-muted p-2 rounded print:bg-gray-100">
+        <div className="mb-3 font-mono text-xs bg-muted p-2 rounded print:bg-gray-100 break-words whitespace-pre-wrap">
           TAF KATL 161720Z 1618/1724 31010KT P6SM SCT040
         </div>
         <div className="grid gap-1 text-xs text-muted-foreground print:text-gray-700 mb-4">
@@ -145,22 +148,22 @@ export default function CramSheetPage() {
           ACS Test Breakdown
         </h2>
         <div className="overflow-x-auto mb-3">
-          <div className="min-w-[500px] text-sm">
-            <div className="grid grid-cols-4 font-bold border-b pb-1 print:border-gray-400">
+          <div className="min-w-0 sm:min-w-[500px] text-sm">
+            <div className="hidden sm:grid sm:grid-cols-4 font-bold border-b pb-1 print:border-gray-400">
               <div>Area</div><div>Topic</div><div>% of Test</div><div>Est. Questions</div>
             </div>
             {[
               ["I", "Regulations", ACS_TOPIC_WEIGHTS.regulations, "9-15"],
-              ["II", "Airspace &amp; Operating Requirements", ACS_TOPIC_WEIGHTS.airspace, "9-15"],
+              ["II", "Airspace & Operating Requirements", ACS_TOPIC_WEIGHTS.airspace, "9-15"],
               ["III", "Weather", ACS_TOPIC_WEIGHTS.weather, "7-10"],
-              ["IV", "Loading &amp; Performance", ACS_TOPIC_WEIGHTS.loadingPerformance, "4-7"],
+              ["IV", "Loading & Performance", ACS_TOPIC_WEIGHTS.loadingPerformance, "4-7"],
               ["V", "Operations", ACS_TOPIC_WEIGHTS.operations, "21-27"],
             ].map(([area, topic, pct, qs]) => (
-              <div key={area} className="grid grid-cols-4 border-b py-1.5 print:border-gray-400">
-                <div className="font-bold">{area}</div>
-                <div>{topic}</div>
-                <div className="text-muted-foreground print:text-gray-700">{pct}</div>
-                <div className="font-semibold">{qs}</div>
+              <div key={area} className="grid grid-cols-1 sm:grid-cols-4 border-b py-2 sm:py-1.5 print:border-gray-400 gap-1 sm:gap-0">
+                <div className="font-bold">Area {area}</div>
+                <div><span className="sm:hidden text-muted-foreground">Topic: </span>{topic}</div>
+                <div><span className="sm:hidden text-muted-foreground">Weight: </span>{pct}</div>
+                <div className="font-semibold"><span className="sm:hidden text-muted-foreground">Questions: </span>{qs}</div>
               </div>
             ))}
           </div>

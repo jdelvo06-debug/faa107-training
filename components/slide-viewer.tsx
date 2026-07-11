@@ -4,13 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ArrowRight, Check, ExternalLink, Layers, ListChecks, RotateCcw } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { addActivity, markSlideVisited } from "@/lib/progress-storage";
 import type { Module, SlideContentBlock } from "@/lib/types";
+import { isFocusContained } from "@/lib/utils";
 
 function BlockRenderer({ block }: { block: SlideContentBlock }) {
   if (block.type === "paragraph") {
@@ -117,12 +118,18 @@ function BlockRenderer({ block }: { block: SlideContentBlock }) {
 export function SlideViewer({ courseModule }: { courseModule: Module }) {
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1);
+  const shouldReduceMotion = useReducedMotion();
   const slide = courseModule.slides[index];
   const percent = useMemo(
     () => Math.round(((index + 1) / courseModule.slides.length) * 100),
     [index, courseModule.slides.length]
   );
   const lastVisitedId = useRef<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const initialX = shouldReduceMotion ? 0 : (direction > 0 ? 36 : -36);
+  const exitX = shouldReduceMotion ? 0 : (direction > 0 ? -36 : 36);
+  const transitionConfig = shouldReduceMotion ? { duration: 0 } : { duration: 0.28, ease: "easeOut" as const };
 
   const goToSlide = (nextIndex: number) => {
     setDirection(nextIndex > index ? 1 : -1);
@@ -142,6 +149,9 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (!isFocusContained(containerRef.current, event.target)) {
+        return;
+      }
       if (event.key === "ArrowRight") {
         setDirection(1);
         setIndex((current) => Math.min(courseModule.slides.length - 1, current + 1));
@@ -156,7 +166,7 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
   }, [courseModule.slides.length]);
 
   return (
-    <div className="grid gap-5">
+    <div ref={containerRef} tabIndex={0} className="grid gap-5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded-lg">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Badge variant={courseModule.stub ? "outline" : "amber"}>{courseModule.stub ? "Content shell" : "Full lesson"}</Badge>
@@ -188,17 +198,17 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
               </span>
               <span>{percent}% through module</span>
             </div>
-            <Progress value={percent} className="bg-white/10" />
+            <Progress value={percent} className="bg-white/10" aria-label="Module lesson progress" />
           </div>
           <div className="relative min-h-[540px] overflow-hidden">
             <AnimatePresence mode="wait" initial={false} custom={direction}>
               <motion.article
                 key={slide.id}
                 custom={direction}
-                initial={{ opacity: 0, x: direction > 0 ? 36 : -36 }}
+                initial={{ opacity: 0, x: initialX }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: direction > 0 ? -36 : 36 }}
-                transition={{ duration: 0.28, ease: "easeOut" }}
+                exit={{ opacity: 0, x: exitX }}
+                transition={transitionConfig}
                 className="min-h-[540px] p-5 sm:p-8"
               >
                 {slide.kicker ? (
@@ -244,7 +254,7 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
                   key={item.id}
                   aria-label={`Go to slide ${slideIndex + 1}`}
                   onClick={() => goToSlide(slideIndex)}
-                  className={`h-2.5 w-8 rounded-full transition-colors ${slideIndex === index ? "bg-primary" : "bg-white/20 hover:bg-white/35"}`}
+                  className={`relative h-2.5 w-8 rounded-full transition-colors after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-[''] ${slideIndex === index ? "bg-primary" : "bg-white/20 hover:bg-white/35"}`}
                 />
               ))}
             </div>

@@ -85,7 +85,7 @@ export function FlashcardDeck({
           Shuffle
         </Button>
       </div>
-      <Progress value={Math.round((reviewed / cards.length) * 100)} />
+      <Progress value={Math.round((reviewed / cards.length) * 100)} aria-label="Flashcards review progress" />
       <button
         onClick={() => setFlipped((current) => !current)}
         className="min-h-[360px] rounded-lg border border-white/10 bg-aviation-panel p-6 text-left shadow-cockpit transition-transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-ring"

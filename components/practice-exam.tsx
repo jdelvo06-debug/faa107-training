@@ -402,32 +402,36 @@ export function PracticeExam({ questions }: { questions: QuizQuestion[] }) {
             Exam progress will not survive a refresh in this browser.
           </p>
         ) : null}
-        <CardTitle className="pt-4 text-2xl leading-tight text-white">
+        <CardTitle id={`question-prompt-${question.sourceQuestionId}`} className="pt-4 text-2xl leading-tight text-white">
           Question {index + 1}. {question.prompt}
         </CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <div role="group" aria-label={`Answers for question ${index + 1}`} className="grid gap-3">
-          {question.choices.map((choice, choiceIndex) => {
-            const selected = answers[question.sourceQuestionId] === choiceIndex;
-            const locked = variant !== "practice_drill" && answers[question.sourceQuestionId] !== undefined;
-            return (
-              <button
-                key={`${question.sourceQuestionId}-${choiceIndex}`}
-                type="button"
-                aria-pressed={selected}
-                disabled={locked}
-                onClick={() => selectAnswer(question.sourceQuestionId, choiceIndex)}
-                className={cn(
-                  "min-h-14 rounded-lg border p-4 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-80",
-                  selected ? "border-primary bg-primary/15 text-white" : "border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.07]",
-                )}
-              >
-                {choice}
-              </button>
-            );
-          })}
-        </div>
+        <fieldset aria-labelledby={`question-prompt-${question.sourceQuestionId}`} className="m-0 min-w-0 border-0 p-0 grid gap-3">
+          <legend className="sr-only">Answer choices</legend>
+          <div role="radiogroup" aria-labelledby={`question-prompt-${question.sourceQuestionId}`} className="grid gap-3">
+            {question.choices.map((choice, choiceIndex) => {
+              const selected = answers[question.sourceQuestionId] === choiceIndex;
+              const locked = variant !== "practice_drill" && answers[question.sourceQuestionId] !== undefined;
+              return (
+                <button
+                  key={`${question.sourceQuestionId}-${choiceIndex}`}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  disabled={locked}
+                  onClick={() => selectAnswer(question.sourceQuestionId, choiceIndex)}
+                  className={cn(
+                    "min-h-14 rounded-lg border p-4 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-80",
+                    selected ? "border-primary bg-primary/15 text-white" : "border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.07]",
+                  )}
+                >
+                  {choice}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
         {variant !== "practice_drill" && answers[question.sourceQuestionId] !== undefined ? (
           <p aria-live="polite" className="text-sm text-slate-300">Answer locked. Correctness is shown only after submission.</p>
         ) : null}

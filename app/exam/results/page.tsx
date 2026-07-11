@@ -55,7 +55,7 @@ export default function ExamResultsPage() {
               {attempt.score} of {attempt.total} correct. {attempt.flaggedCount} question(s) were flagged.
             </p>
           </div>
-          <Progress value={percent} />
+          <Progress value={percent} aria-label="Exam score progress" />
           <div className="flex flex-wrap gap-3">
             <Button asChild>
               <Link href="/exam">{messaging.action}</Link>
@@ -81,7 +81,7 @@ export default function ExamResultsPage() {
                     {score.correct}/{score.total}
                   </span>
                 </div>
-                <Progress value={topicPercent} />
+                <Progress value={topicPercent} aria-label={`Topic score progress for ${topic}`} />
               </div>
             );
           })}

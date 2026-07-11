@@ -21,7 +21,7 @@ export default function LandingPage() {
         <div className="grid gap-8 p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
           <div className="flex min-h-[520px] flex-col justify-center">
             <Badge variant="amber" className="fade-up fade-up-delay-1 mb-5 w-fit">FAA Part 107</Badge>
-            <h1 className="fade-up fade-up-delay-2 max-w-4xl text-5xl font-black leading-[1.02] tracking-normal text-white sm:text-6xl lg:text-7xl">
+            <h1 className="fade-up fade-up-delay-2 max-w-4xl text-4xl font-black leading-[1.02] tracking-normal text-white sm:text-6xl lg:text-7xl">
               Remote pilot certification training, built like a flight deck.
             </h1>
             <p className="fade-up fade-up-delay-3 mt-6 max-w-2xl text-lg leading-8 text-slate-300">
