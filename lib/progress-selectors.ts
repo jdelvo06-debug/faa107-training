@@ -21,19 +21,6 @@ export function getOverallProgress(progress: ProgressState) {
   return totalSlides === 0 ? 0 : Math.round((visitedSlides / totalSlides) * 100);
 }
 
-export function getContinueTarget(progress: ProgressState) {
-  const activity = progress.recentActivity.find((item) => item.href.startsWith("/modules/"));
-  if (activity) {
-    return activity;
-  }
-
-  const firstIncomplete = modules.find((courseModule) => !progress.modules[courseModule.id]?.completed);
-  return {
-    label: firstIncomplete ? `Start Module ${firstIncomplete.number}` : "Review Module 1",
-    href: firstIncomplete ? `/modules/${firstIncomplete.id}` : "/modules/1"
-  };
-}
-
 export function getWeakAreas(progress: ProgressState) {
   const totals: Partial<Record<TopicArea, { correct: number; total: number }>> = {};
 
@@ -67,4 +54,84 @@ export function getFlashcardTotals(progress: ProgressState) {
     known,
     unknown
   };
+}
+
+export function getResumeTarget(progress: ProgressState) {
+  const lastModuleActivity = progress.recentActivity.find((item) => item.href.startsWith("/modules/"));
+
+  if (lastModuleActivity) {
+    const match = lastModuleActivity.href.match(/\/modules\/([^\/]+)$/);
+    const moduleId = match ? match[1] : null;
+    const courseModule = moduleId ? modules.find((m) => m.id === moduleId) : null;
+
+    if (courseModule) {
+      const moduleProgress = progress.modules[courseModule.id];
+      if (moduleProgress?.lastSlideId) {
+        const slideIndex = courseModule.slides.findIndex((s) => s.id === moduleProgress.lastSlideId);
+        const slideNumber = slideIndex !== -1 ? slideIndex + 1 : 1;
+        return {
+          label: `Resume Module ${courseModule.number}, slide ${slideNumber}`,
+          href: `/modules/${courseModule.id}`
+        };
+      }
+      return {
+        label: `Resume Module ${courseModule.number}`,
+        href: `/modules/${courseModule.id}`
+      };
+    }
+  }
+
+  // Fallback to first incomplete module
+  const firstIncomplete = modules.find((courseModule) => !progress.modules[courseModule.id]?.completed);
+  if (firstIncomplete) {
+    const moduleProgress = progress.modules[firstIncomplete.id];
+    if (moduleProgress?.lastSlideId) {
+      const slideIndex = firstIncomplete.slides.findIndex((s) => s.id === moduleProgress.lastSlideId);
+      const slideNumber = slideIndex !== -1 ? slideIndex + 1 : 1;
+      return {
+        label: `Resume Module ${firstIncomplete.number}, slide ${slideNumber}`,
+        href: `/modules/${firstIncomplete.id}`
+      };
+    }
+    return {
+      label: `Start Module ${firstIncomplete.number}`,
+      href: `/modules/${firstIncomplete.id}`
+    };
+  }
+
+  // If everything is complete, review Module 1
+  return {
+    label: "Review Module 1",
+    href: "/modules/1"
+  };
+}
+
+export function getTopicModuleHref(topic: TopicArea): string {
+  switch (topic) {
+    case "Regulations":
+      return "/modules/2";
+    case "Airspace":
+      return "/modules/3";
+    case "Weather":
+      return "/modules/6";
+    case "Loading & Performance":
+      return "/modules/7";
+    case "Operations":
+      return "/modules/7";
+    default:
+      return "/modules";
+  }
+}
+
+export function findRecommendedDay(
+  plan: { day: number; modules: number[] }[],
+  modulesProgress: Record<string, { completed: boolean }>
+): number | null {
+  for (const day of plan) {
+    const hasIncomplete = day.modules.some(m => !modulesProgress[String(m)]?.completed);
+    if (hasIncomplete) {
+      return day.day;
+    }
+  }
+  return null;
 }

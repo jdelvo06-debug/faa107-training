@@ -1,6 +1,11 @@
+"use client";
+
 import { CheckCircle, Clock, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { moduleHref } from "@/lib/learning-routes";
+import { useProgress } from "@/lib/progress-storage";
+import { findRecommendedDay } from "@/lib/progress-selectors";
+import { cn } from "@/lib/utils";
 
 const modules = [
   { num: 1, title: "Welcome & Getting Started" },
@@ -88,6 +93,14 @@ const fourteenDayPlan = [
 ];
 
 export default function StudyPlanPage() {
+  const progress = useProgress();
+  const recommendedSevenDay = findRecommendedDay(sevenDayPlan, progress.modules);
+  const recommendedFourteenDay = findRecommendedDay(fourteenDayPlan, progress.modules);
+
+  const getDayCompletedCount = (dayModules: number[]) => {
+    return dayModules.filter(m => progress.modules[String(m)]?.completed).length;
+  };
+
   return (
     <div className="mx-auto max-w-4xl grid gap-8">
       <div>
@@ -107,32 +120,60 @@ export default function StudyPlanPage() {
           For experienced operators or anyone with a tight deadline. Plan on 3–4 hours per day. Every day covers tested ACS material.
         </p>
         <div className="grid gap-4">
-          {sevenDayPlan.map((day) => (
-            <div key={day.day} className="grid gap-2 rounded-lg border bg-muted/30 p-4 sm:grid-cols-[auto_1fr]">
-              <div className="flex size-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shrink-0">
-                {day.day}
-              </div>
-              <div>
-                <h3 className="font-bold">{day.title}</h3>
-                <p className="text-sm text-muted-foreground mt-1">{day.focus}</p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {day.modules.map((m) => (
-                    <Link
-                      key={m}
-                      href={moduleHref(m)}
-                      className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium hover:bg-accent transition-colors"
-                    >
-                      <BookOpen className="h-3 w-3" />
-                      M{m}: {modules[m - 1].title}
-                    </Link>
-                  ))}
+          {sevenDayPlan.map((day) => {
+            const completedCount = getDayCompletedCount(day.modules);
+            const isRecommended = day.day === recommendedSevenDay;
+            return (
+              <div key={day.day} className={cn(
+                "grid gap-2 rounded-lg border p-4 sm:grid-cols-[auto_1fr] transition-all",
+                isRecommended
+                  ? "border-primary bg-primary/[0.04] ring-1 ring-primary/20 shadow-[0_0_12px_rgba(245,158,11,0.05)]"
+                  : "border-border bg-muted/30"
+              )}>
+                <div className="flex flex-col items-center shrink-0">
+                  <div className={cn(
+                    "flex size-10 items-center justify-center rounded-full text-sm font-bold shrink-0",
+                    isRecommended ? "bg-primary text-primary-foreground" : "bg-muted-foreground/20 text-muted-foreground"
+                  )}>
+                    {day.day}
+                  </div>
+                  {isRecommended && <span className="text-[10px] text-primary font-bold mt-1.5 uppercase tracking-wider">Today</span>}
                 </div>
-                <p className="mt-2 text-xs text-primary font-medium">
-                  💡 {day.tip}
-                </p>
+                <div>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-bold">{day.title}</h3>
+                    <span className="text-xs text-muted-foreground bg-white/5 px-2 py-0.5 rounded-full">
+                      {completedCount}/{day.modules.length} complete
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">{day.focus}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {day.modules.map((m) => {
+                      const completed = progress.modules[String(m)]?.completed;
+                      return (
+                        <Link
+                          key={m}
+                          href={moduleHref(m)}
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
+                            completed
+                              ? "bg-emerald-500/10 border-emerald-500/35 text-emerald-300 hover:bg-emerald-500/20"
+                              : "hover:bg-accent border-white/10"
+                          )}
+                        >
+                          {completed ? <CheckCircle className="h-3 w-3 text-emerald-400" /> : <BookOpen className="h-3 w-3" />}
+                          M{m}: {modules[m - 1].title}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-2 text-xs text-primary font-medium">
+                    💡 {day.tip}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -146,28 +187,57 @@ export default function StudyPlanPage() {
           Steady pace for first-time learners. Plan on 1.5–2 hours per day. Includes quiz days to reinforce.
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
-          {fourteenDayPlan.map((day) => (
-            <div key={day.day} className="flex gap-3 rounded-lg border bg-muted/30 p-3">
-              <div className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shrink-0 mt-0.5">
-                {day.day}
-              </div>
-              <div className="min-w-0">
-                <h3 className="font-semibold text-sm">{day.title}</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">{day.focus}</p>
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {day.modules.map((m) => (
-                    <Link
-                      key={m}
-                      href={moduleHref(m)}
-                      className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium hover:bg-accent transition-colors"
-                    >
-                      M{m}
-                    </Link>
-                  ))}
+          {fourteenDayPlan.map((day) => {
+            const completedCount = getDayCompletedCount(day.modules);
+            const isRecommended = day.day === recommendedFourteenDay;
+            return (
+              <div key={day.day} className={cn(
+                "flex gap-3 rounded-lg border p-3 transition-all",
+                isRecommended
+                  ? "border-primary bg-primary/[0.04] ring-1 ring-primary/20 shadow-[0_0_12px_rgba(245,158,11,0.05)]"
+                  : "border-border bg-muted/30"
+              )}>
+                <div className="flex flex-col items-center shrink-0">
+                  <div className={cn(
+                    "flex size-7 items-center justify-center rounded-full text-xs font-bold shrink-0 mt-0.5",
+                    isRecommended ? "bg-primary text-primary-foreground" : "bg-muted-foreground/20 text-muted-foreground"
+                  )}>
+                    {day.day}
+                  </div>
+                  {isRecommended && <span className="text-[8px] text-primary font-bold mt-1 uppercase tracking-wider">Today</span>}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-semibold text-sm">{day.title}</h3>
+                    <span className="text-[10px] text-muted-foreground bg-white/5 px-1.5 py-0.2 rounded-full">
+                      {completedCount}/{day.modules.length}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{day.focus}</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {day.modules.map((m) => {
+                      const completed = progress.modules[String(m)]?.completed;
+                      return (
+                        <Link
+                          key={m}
+                          href={moduleHref(m)}
+                          className={cn(
+                            "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium transition-colors gap-0.5",
+                            completed
+                              ? "bg-emerald-500/10 border-emerald-500/35 text-emerald-300 hover:bg-emerald-500/20"
+                              : "hover:bg-accent border-white/10"
+                          )}
+                        >
+                          {completed && <CheckCircle className="h-2 w-2 text-emerald-400" />}
+                          M{m}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

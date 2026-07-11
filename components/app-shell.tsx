@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Clock, FileText, Gauge, GraduationCap, Library, Menu, Plane, Trophy } from "lucide-react";
+import { BookOpen, Clock, FileText, Gauge, GraduationCap, Library, Menu, Plane, Trophy, HelpCircle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ModuleNav } from "@/components/module-nav";
@@ -16,7 +16,9 @@ const primaryLinks = [
   { href: "/flashcards", label: "Flashcards", icon: Library },
   { href: "/exam", label: "Exam", icon: Trophy },
   { href: "/study-plan", label: "Study Plan", icon: Clock },
-  { href: "/cram-sheet", label: "Cram Sheet", icon: FileText }
+  { href: "/cram-sheet", label: "Cram Sheet", icon: FileText },
+  { href: "/resources", label: "Resources", icon: HelpCircle },
+  { href: "/about", label: "About", icon: Info }
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

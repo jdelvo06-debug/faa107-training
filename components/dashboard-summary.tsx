@@ -1,19 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BookOpen, ClipboardCheck, RotateCcw, Trophy } from "lucide-react";
+import { ArrowRight, ClipboardCheck, RotateCcw, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ProgressRing } from "@/components/progress-ring";
 import { modules } from "@/lib/course-data";
-import { getContinueTarget, getFlashcardTotals, getOverallProgress, getWeakAreas } from "@/lib/progress-selectors";
+import { getFlashcardTotals, getOverallProgress, getResumeTarget, getTopicModuleHref, getWeakAreas } from "@/lib/progress-selectors";
 import { resetProgress, useProgress } from "@/lib/progress-storage";
 
 export function DashboardSummary() {
   const progress = useProgress();
   const overall = getOverallProgress(progress);
-  const target = getContinueTarget(progress);
+  const target = getResumeTarget(progress);
   const weakAreas = getWeakAreas(progress);
   const flashcardTotals = getFlashcardTotals(progress);
   const completedModules = modules.filter((courseModule) => progress.modules[courseModule.id]?.completed).length;
@@ -73,21 +73,7 @@ export function DashboardSummary() {
       </section>
 
       <section className="grid gap-5 lg:grid-cols-3">
-        <Card className="cockpit-bezel bg-card/95">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" />
-              Continue
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4 text-sm text-muted-foreground">{target.label}</p>
-            <Button asChild variant="outline">
-              <Link href={target.href}>Open</Link>
-            </Button>
-          </CardContent>
-        </Card>
-        <Card className="cockpit-bezel bg-card/95">
+        <Card className="cockpit-bezel bg-card/95 lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ClipboardCheck className="h-5 w-5 text-primary" />
@@ -97,13 +83,13 @@ export function DashboardSummary() {
           <CardContent className="grid gap-3">
             {weakAreas.length ? (
               weakAreas.map((area) => (
-                <div key={area.topic}>
-                  <div className="mb-2 flex justify-between text-sm">
+                <Link key={area.topic} href={getTopicModuleHref(area.topic)} className="block group">
+                  <div className="mb-2 flex justify-between text-sm group-hover:text-primary transition-colors">
                     <span>{area.topic}</span>
                     <span className="stat-mono">{area.percent}%</span>
                   </div>
                   <Progress value={area.percent} aria-label={`Weak area progress for ${area.topic}`} />
-                </div>
+                </Link>
               ))
             ) : (
               <p className="text-sm text-muted-foreground">Complete a quiz or exam to generate weak-area guidance.</p>

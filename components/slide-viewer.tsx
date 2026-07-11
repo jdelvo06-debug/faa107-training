@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { addActivity, markSlideVisited } from "@/lib/progress-storage";
+import { addActivity, getProgress, markSlideVisited } from "@/lib/progress-storage";
 import type { Module, SlideContentBlock } from "@/lib/types";
 import { isFocusContained } from "@/lib/utils";
 
@@ -130,6 +130,17 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
   const initialX = shouldReduceMotion ? 0 : (direction > 0 ? 36 : -36);
   const exitX = shouldReduceMotion ? 0 : (direction > 0 ? -36 : 36);
   const transitionConfig = shouldReduceMotion ? { duration: 0 } : { duration: 0.28, ease: "easeOut" as const };
+
+  useEffect(() => {
+    const saved = getProgress();
+    const lastSlideId = saved.modules[courseModule.id]?.lastSlideId;
+    if (lastSlideId) {
+      const savedIndex = courseModule.slides.findIndex((s) => s.id === lastSlideId);
+      if (savedIndex !== -1) {
+        setIndex(savedIndex);
+      }
+    }
+  }, [courseModule.id, courseModule.slides]);
 
   const goToSlide = (nextIndex: number) => {
     setDirection(nextIndex > index ? 1 : -1);
