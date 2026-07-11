@@ -1,5 +1,5 @@
 import type {
-  ExamVariant,
+  AssessmentVariant,
   PresentationMetadata,
   PresentationQuestion,
   QuizMode,
@@ -17,6 +17,10 @@ export const FAA_EXAM_TARGETS: Readonly<Record<TopicArea, number>> = {
 
 export interface DeterministicOptions {
   seed: number;
+}
+
+export interface PracticeDrillOptions extends DeterministicOptions {
+  count?: number;
 }
 
 export interface QuizModePolicy {
@@ -71,7 +75,7 @@ function validateQuestion(question: QuizQuestion) {
 
 function buildPresentation(
   question: QuizQuestion,
-  variant: ExamVariant,
+  variant: AssessmentVariant,
   seed: number,
   random: () => number,
 ): PresentationQuestion {
@@ -137,7 +141,7 @@ export function restorePresentationQuestion(
 
 export function presentQuestion(
   question: QuizQuestion,
-  variant: ExamVariant,
+  variant: AssessmentVariant,
   options: DeterministicOptions,
 ): PresentationQuestion {
   return buildPresentation(
@@ -176,6 +180,28 @@ export function buildFaaTimedExam(
   return shuffle(selected, random).map((question) =>
     buildPresentation(question, "faa_timed", options.seed, random),
   );
+}
+
+export function buildPracticeDrill(
+  pool: readonly QuizQuestion[],
+  options: PracticeDrillOptions,
+): PresentationQuestion[] {
+  const random = createSeededRandom(options.seed);
+  const seenIds = new Set<string>();
+  const uniquePool = pool.filter((question) => {
+    if (seenIds.has(question.id)) {
+      return false;
+    }
+    seenIds.add(question.id);
+    return true;
+  });
+  const count = Math.min(options.count ?? 60, uniquePool.length);
+
+  return shuffle(uniquePool, random)
+    .slice(0, count)
+    .map((question) =>
+      buildPresentation(question, "practice_drill", options.seed, random),
+    );
 }
 
 export function getQuizModePolicy(mode: QuizMode): QuizModePolicy {

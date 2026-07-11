@@ -182,6 +182,24 @@ test("practice drill preserves all canonical choices and their correct index", (
   assert.deepEqual(presented.presentation.sourceChoiceIndexes, [0, 1, 2, 3]);
 });
 
+test("practice drill builder selects broad canonical four-choice presentations", () => {
+  const { buildPracticeDrill } = loadTypeScriptModule(
+    "lib/assessment-engine.ts",
+  );
+  const pool = sufficientPool();
+
+  const drill = buildPracticeDrill(pool, { seed: 107, count: 60 });
+
+  assert.equal(drill.length, 60);
+  assert.equal(new Set(drill.map((item) => item.sourceQuestionId)).size, 60);
+  assert.equal(drill.every((item) => item.choices.length === 4), true);
+  for (const item of drill) {
+    const canonical = pool.find((question) => question.id === item.sourceQuestionId);
+    assert.deepEqual(item.choices, canonical.choices);
+    assert.equal(item.correctIndex, canonical.correctIndex);
+  }
+});
+
 test("presentation leaves the canonical question object untouched", () => {
   const { presentQuestion } = loadTypeScriptModule(
     "lib/assessment-engine.ts",

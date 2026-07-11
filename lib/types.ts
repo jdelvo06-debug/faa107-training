@@ -78,10 +78,11 @@ export interface QuizQuestion {
 
 export type QuizMode = "study" | "assessment";
 
-export type ExamVariant = "faa_timed" | "practice_drill";
+export type AssessmentVariant = "faa_timed" | "practice_drill";
+export type ExamVariant = AssessmentVariant | "legacy_timed";
 
 export interface PresentationMetadata {
-  variant: ExamVariant;
+  variant: AssessmentVariant;
   seed: number;
   sourceChoiceIndexes: number[];
 }
@@ -111,6 +112,19 @@ export interface QuizAttempt {
   total: number;
   topicScores: Partial<Record<TopicArea, { correct: number; total: number }>>;
   completedAt: string;
+  mode?: QuizMode;
+}
+
+export interface ExamReviewItem {
+  questionNumber: number;
+  sourceQuestionId: string;
+  prompt: string;
+  topic: TopicArea;
+  selectedAnswer: string | null;
+  correctAnswer: string;
+  correct: boolean;
+  explanation: string;
+  flagged: boolean;
 }
 
 export interface ExamAttempt {
@@ -121,6 +135,8 @@ export interface ExamAttempt {
   topicScores: Partial<Record<TopicArea, { correct: number; total: number }>>;
   completedAt: string;
   flaggedCount: number;
+  variant?: ExamVariant;
+  review?: ExamReviewItem[];
 }
 
 export interface RecentActivity {

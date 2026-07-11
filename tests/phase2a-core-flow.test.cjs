@@ -90,7 +90,15 @@ test("timer submission uses the latest answers and flags and only completes once
   controller.update({ pool, answers: { q1: 1, q2: 3 }, flags: ["q2"] });
 
   const timerAttempt = controller.submit();
-  assert.deepEqual(timerAttempt, {
+  assert.deepEqual(
+    {
+      score: timerAttempt.score,
+      total: timerAttempt.total,
+      passed: timerAttempt.passed,
+      topicScores: timerAttempt.topicScores,
+      flaggedCount: timerAttempt.flaggedCount,
+    },
+    {
     score: 1,
     total: 2,
     passed: false,
@@ -99,7 +107,9 @@ test("timer submission uses the latest answers and flags and only completes once
       Operations: { correct: 0, total: 1 },
     },
     flaggedCount: 1,
-  });
+    },
+  );
+  assert.equal(timerAttempt.review.length, 2);
   assert.equal(controller.submit(), null, "button/timer race must not duplicate");
 });
 
@@ -137,7 +147,7 @@ test("active exam sessions round-trip exact question order and learner state", (
   assert.equal(restored.started, true);
 });
 
-test("corrupt, invalid, missing-question, and expired exam sessions are rejected", () => {
+test("corrupt, invalid, and missing-question exam sessions are rejected", () => {
   const { createActiveExamSession, restoreActiveExamSession } =
     loadTypeScriptModule("lib/exam-session.ts");
   const now = 3_000_000;
@@ -162,7 +172,201 @@ test("corrupt, invalid, missing-question, and expired exam sessions are rejected
     restoreActiveExamSession(valid, questions.slice(0, 1), now),
     null,
   );
-  assert.equal(restoreActiveExamSession(valid, questions, now + 60_001), null);
+  const expired = restoreActiveExamSession(valid, questions, now + 60_001);
+  assert.ok(expired);
+  assert.equal(expired.variant, "legacy_timed");
+  assert.equal(expired.secondsLeft, 0);
+});
+
+test("FAA timed session round-trips exact variant, presentation, learner state, and deadline", () => {
+  const { buildFaaTimedExam } = loadTypeScriptModule(
+    "lib/assessment-engine.ts",
+  );
+  const { createActiveExamSession, restoreActiveExamSession } =
+    loadTypeScriptModule("lib/exam-session.ts");
+  const topics = {
+    Regulations: 12,
+    Airspace: 12,
+    Weather: 9,
+    "Loading & Performance": 6,
+    Operations: 21,
+  };
+  const questions = Object.entries(topics).flatMap(([topic, count]) =>
+    Array.from({ length: count }, (_, index) =>
+      question(`${topic}-${index}`, index % 4, topic),
+    ),
+  );
+  const now = 4_000_000;
+  const seed = 2_026_07_11;
+  const pool = buildFaaTimedExam(questions, { seed });
+  const stored = createActiveExamSession(
+    {
+      variant: "faa_timed",
+      seed,
+      questions: pool,
+      answers: {
+        [pool[0].sourceQuestionId]: 1,
+        [pool[1].sourceQuestionId]: 2,
+      },
+      flags: [pool[1].sourceQuestionId],
+      currentIndex: 1,
+      remainingSeconds: 6_543,
+    },
+    now,
+  );
+
+  const restored = restoreActiveExamSession(
+    JSON.parse(JSON.stringify(stored)),
+    questions,
+    now,
+  );
+
+  assert.ok(restored);
+  assert.equal(restored.variant, "faa_timed");
+  assert.equal(restored.seed, seed);
+  assert.deepEqual(restored.pool, pool);
+  assert.deepEqual(restored.answers, stored.answers);
+  assert.deepEqual(restored.flags, stored.flags);
+  assert.equal(restored.currentIndex, 1);
+  assert.equal(restored.deadlineAt, now + 6_543_000);
+});
+
+test("practice drill session round-trips canonical choices without a timer", () => {
+  const { buildPracticeDrill } = loadTypeScriptModule(
+    "lib/assessment-engine.ts",
+  );
+  const { createActiveExamSession, restoreActiveExamSession } =
+    loadTypeScriptModule("lib/exam-session.ts");
+  const questions = [question("q1", 0), question("q2", 3), question("q3", 2)];
+  const pool = buildPracticeDrill(questions, { seed: 55, count: 3 });
+  const stored = createActiveExamSession({
+    variant: "practice_drill",
+    seed: 55,
+    questions: pool,
+    answers: { [pool[0].sourceQuestionId]: 0 },
+    flags: [pool[2].sourceQuestionId],
+    currentIndex: 2,
+    deadlineAt: null,
+  });
+
+  const restored = restoreActiveExamSession(stored, questions);
+
+  assert.ok(restored);
+  assert.equal(restored.variant, "practice_drill");
+  assert.equal(restored.deadlineAt, null);
+  assert.deepEqual(restored.pool, pool);
+  assert.equal(restored.pool.every((item) => item.choices.length === 4), true);
+});
+
+test("version 2 sessions reject changed, corrupt, or incompatible presentation metadata", () => {
+  const { presentQuestion } = loadTypeScriptModule(
+    "lib/assessment-engine.ts",
+  );
+  const { createActiveExamSession, restoreActiveExamSession } =
+    loadTypeScriptModule("lib/exam-session.ts");
+  const questions = [question("q1", 1), question("q2", 0)];
+  const pool = questions.map((item) =>
+    presentQuestion(item, "faa_timed", { seed: 80 }),
+  );
+  const stored = createActiveExamSession({
+    variant: "faa_timed",
+    seed: 80,
+    questions: pool,
+    answers: {},
+    flags: [],
+    currentIndex: 0,
+    remainingSeconds: 60,
+  });
+
+  assert.equal(
+    restoreActiveExamSession(
+      {
+        ...stored,
+        questions: stored.questions.map((item, index) =>
+          index === 0
+            ? {
+                ...item,
+                presentation: {
+                  ...item.presentation,
+                  sourceChoiceIndexes: [0, 0, 1],
+                },
+              }
+            : item,
+        ),
+      },
+      questions,
+    ),
+    null,
+  );
+});
+
+test("review summary reports answered, unanswered, and flagged counts", () => {
+  const { createExamReviewSummary } = loadTypeScriptModule(
+    "lib/exam-session.ts",
+  );
+  const pool = [question("q1", 0), question("q2", 1), question("q3", 2)];
+
+  assert.deepEqual(
+    createExamReviewSummary(pool, { q1: 0, q3: 1 }, ["q2", "q3"]),
+    { answered: 2, unanswered: 1, flagged: 2, total: 3 },
+  );
+});
+
+test("manual submit requires confirmation only when unanswered questions remain", () => {
+  const { getManualSubmitGuard } = loadTypeScriptModule(
+    "lib/exam-session.ts",
+  );
+
+  assert.deepEqual(
+    getManualSubmitGuard({ answered: 59, unanswered: 1, flagged: 3, total: 60 }),
+    { requiresConfirmation: true, unanswered: 1 },
+  );
+  assert.deepEqual(
+    getManualSubmitGuard({ answered: 60, unanswered: 0, flagged: 3, total: 60 }),
+    { requiresConfirmation: false, unanswered: 0 },
+  );
+});
+
+test("completed exam attempt retains detailed answer-review data", () => {
+  const { createExamSubmissionController } = loadTypeScriptModule(
+    "lib/exam-session.ts",
+  );
+  const pool = [question("q1", 1, "Airspace"), question("q2", 0, "Weather")];
+  const controller = createExamSubmissionController();
+
+  controller.update({
+    variant: "practice_drill",
+    pool,
+    answers: { q1: 1 },
+    flags: ["q2"],
+  });
+  const attempt = controller.submit();
+
+  assert.equal(attempt.variant, "practice_drill");
+  assert.deepEqual(attempt.review, [
+    {
+      questionNumber: 1,
+      sourceQuestionId: "q1",
+      prompt: "Question q1",
+      topic: "Airspace",
+      selectedAnswer: "B",
+      correctAnswer: "B",
+      correct: true,
+      explanation: "Explanation",
+      flagged: false,
+    },
+    {
+      questionNumber: 2,
+      sourceQuestionId: "q2",
+      prompt: "Question q2",
+      topic: "Weather",
+      selectedAnswer: null,
+      correctAnswer: "A",
+      correct: false,
+      explanation: "Explanation",
+      flagged: true,
+    },
+  ]);
 });
 
 test("successful final submission clears the active session and stores one attempt", () => {
@@ -382,4 +586,76 @@ test("invalid-session and explicit active-exam cleanup fail safely", () => {
   } finally {
     global.window = originalWindow;
   }
+});
+
+test("expired FAA timed sessions restore at zero so their saved snapshot can complete", () => {
+  const { buildFaaTimedExam } = loadTypeScriptModule("lib/assessment-engine.ts");
+  const { createActiveExamSession, restoreActiveExamSession } =
+    loadTypeScriptModule("lib/exam-session.ts");
+  const topics = { Regulations: 12, Airspace: 12, Weather: 9, "Loading & Performance": 6, Operations: 21 };
+  const questions = Object.entries(topics).flatMap(([topic, count]) =>
+    Array.from({ length: count }, (_, index) => question(`${topic}-expired-${index}`, index % 4, topic)),
+  );
+  const pool = buildFaaTimedExam(questions, { seed: 91 });
+  const stored = createActiveExamSession({
+    variant: "faa_timed",
+    seed: 91,
+    questions: pool,
+    answers: { [pool[0].sourceQuestionId]: pool[0].correctIndex },
+    flags: [pool[1].sourceQuestionId],
+    currentIndex: 4,
+    deadlineAt: 10_000,
+  });
+
+  const restored = restoreActiveExamSession(stored, questions, 10_001);
+
+  assert.ok(restored);
+  assert.equal(restored.variant, "faa_timed");
+  assert.equal(restored.secondsLeft, 0);
+  assert.deepEqual(restored.answers, stored.answers);
+  assert.deepEqual(restored.flags, stored.flags);
+  assert.deepEqual(restored.pool, pool);
+});
+
+test("legacy active sessions resume honestly as timed legacy exams", () => {
+  const { restoreActiveExamSession } = loadTypeScriptModule("lib/exam-session.ts");
+  const now = 20_000;
+  const questions = [question("legacy-1", 0), question("legacy-2", 1)];
+  const restored = restoreActiveExamSession({
+    version: 1,
+    started: true,
+    questionIds: questions.map((item) => item.id),
+    answers: { "legacy-1": 0 },
+    flags: ["legacy-2"],
+    currentIndex: 1,
+    deadlineAt: now + 30_000,
+  }, questions, now);
+
+  assert.ok(restored);
+  assert.equal(restored.variant, "legacy_timed");
+  assert.equal(restored.secondsLeft, 30);
+  assert.equal(restored.deadlineAt, now + 30_000);
+});
+
+test("result messaging distinguishes FAA assessment, drill study, and legacy timed attempts", () => {
+  const { getExamResultMessaging } = loadTypeScriptModule("lib/exam-session.ts");
+
+  assert.deepEqual(getExamResultMessaging("faa_timed", true), {
+    label: "FAA-like Timed Exam", title: "Passing score", action: "Retake exam", assessment: true,
+  });
+  assert.deepEqual(getExamResultMessaging("practice_drill", false), {
+    label: "Practice Drill", title: "Drill complete", action: "Start another drill", assessment: false,
+  });
+  assert.deepEqual(getExamResultMessaging("legacy_timed", false), {
+    label: "Resumed legacy timed practice exam", title: "Legacy timed practice complete", action: "Choose new practice", assessment: true,
+  });
+});
+
+test("unanswered confirmation uses Radix Dialog focus management", () => {
+  const source = fs.readFileSync(path.join(root, "components/practice-exam.tsx"), "utf8");
+
+  assert.match(source, /@radix-ui\/react-dialog/);
+  assert.match(source, /<Dialog\.Root open=\{confirmUnanswered\}/);
+  assert.match(source, /<Dialog\.Content/);
+  assert.doesNotMatch(source, /role="alertdialog"/);
 });
