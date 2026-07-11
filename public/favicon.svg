@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">FAA Part 107</title>
+  <desc id="desc">Amber aircraft wing and 107 mark on a navy field</desc>
+  <rect width="512" height="512" rx="96" fill="#061525"/>
+  <path d="M76 230 232 102c14-12 34-12 48 0l156 128-22 43-134-69v101l79 58-15 38-88-36-88 36-15-38 79-58V204L98 273Z" fill="#f59e0b"/>
+  <path d="M151 421h210" stroke="#8ecae6" stroke-width="18" stroke-linecap="round"/>
+  <text x="256" y="454" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="800" text-anchor="middle">107</text>
+</svg>

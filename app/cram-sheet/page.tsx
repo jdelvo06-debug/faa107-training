@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import { ACS_TOPIC_WEIGHTS } from "@/lib/acs-weights";
+
+export const metadata: Metadata = {
+  title: "FAA Part 107 Cram Sheet",
+  description: "Review a concise FAA Part 107 knowledge test reference covering rules, airspace, weather, and operations.",
+};
 
 export default function CramSheetPage() {
   return (

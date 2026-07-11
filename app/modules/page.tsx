@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { modules } from "@/lib/course-data";
+
+export const metadata: Metadata = {
+  title: "FAA Part 107 Course Modules",
+  description: "Explore 13 structured FAA Part 107 course modules with lessons, quizzes, and flashcards.",
+};
 
 export default function ModulesPage() {
   return (

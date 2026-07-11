@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BookOpen, CheckCircle2, Clock, Radar, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "FAA Part 107 Training Platform",
+  description: "Study for the FAA Part 107 remote pilot knowledge test with lessons, quizzes, flashcards, and practice exams.",
+};
 
 const highlights = [
   "All 13 modules fully built",

@@ -67,10 +67,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-80 border-r border-white/10 bg-aviation-navy/95 p-5 lg:block">
+      <aside className="app-desktop-sidebar fixed inset-y-0 left-0 z-30 hidden w-80 border-r border-white/10 bg-aviation-navy/95 p-5 lg:block">
         {navContent}
       </aside>
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-background/90 px-4 py-3 backdrop-blur lg:hidden">
+      <header className="app-mobile-header sticky top-0 z-20 border-b border-white/10 bg-background/90 px-4 py-3 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold">
             <Plane className="h-5 w-5 text-primary" />
@@ -90,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <main className="lg:pl-80">
-        <div className="mx-auto min-h-screen w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
+        <div className="app-main-content mx-auto min-h-screen w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
       </main>
     </div>
   );

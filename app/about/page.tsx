@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import { Card, CardContent } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "About the FAA Part 107 Training Platform",
+  description: "Learn about this free, self-guided FAA Part 107 remote pilot certification study platform.",
+};
 
 export default function AboutPage() {
   return (
