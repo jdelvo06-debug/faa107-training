@@ -67,6 +67,8 @@
 .moduleCompletionPrimary:hover { background: var(--flight-coral-dark) !important; }
 .moduleCompletionSecondary { min-height: 48px; border-color: var(--flight-blue) !important; background: transparent !important; color: var(--flight-blue) !important; }
 .moduleCompletionSecondary:hover { background: var(--flight-sky) !important; }
+.moduleCompletionPending { border-color: #c6dfe8; background: var(--flight-sky); }
+.moduleCompletionPending > svg { color: var(--flight-blue); }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 .flightHeader { position: relative; z-index: 40; padding-top: env(safe-area-inset-top); border-bottom: 1px solid rgba(10, 70, 66, 0.09); background: rgba(251, 247, 238, 0.97); }

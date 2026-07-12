@@ -39,10 +39,18 @@ function compileModule(relativePath, localRequire, jsx = ts.JsxEmit.None) {
   return loaded.exports;
 }
 
-function renderSlideViewer(slideCount) {
+function renderSlideViewer({ slideCount, initialIndex = 0, moduleProgress }) {
   const styles = new Proxy({}, { get: (_, name) => String(name) });
   const Icon = () => React.createElement("span", { "aria-hidden": "true" });
   const lucide = new Proxy({}, { get: () => Icon });
+  let useStateCall = 0;
+  const testReact = {
+    ...React,
+    useState: (initialValue) => {
+      useStateCall += 1;
+      return [useStateCall === 1 ? initialIndex : initialValue, () => {}];
+    },
+  };
   const omitMotionProps = ({ custom, initial, animate, exit, transition, ...props }) => props;
   const ui = {
     Badge: ({ children, ...props }) => React.createElement("span", props, children),
@@ -57,7 +65,8 @@ function renderSlideViewer(slideCount) {
   const Link = ({ href, children, ...props }) =>
     React.createElement("a", { href, ...props }, children);
   const localRequire = (specifier) => {
-    if (specifier === "react" || specifier === "react/jsx-runtime") return require(specifier);
+    if (specifier === "react") return testReact;
+    if (specifier === "react/jsx-runtime") return require(specifier);
     if (specifier === "next/link") return { __esModule: true, default: Link };
     if (specifier === "next/image") return { __esModule: true, default: (props) => React.createElement("img", props) };
     if (specifier === "lucide-react") return lucide;
@@ -76,10 +85,14 @@ function renderSlideViewer(slideCount) {
     if (specifier === "@/components/ui/card") return { Card: ui.Card, CardContent: ui.CardContent };
     if (specifier === "@/components/ui/progress") return { Progress: ui.Progress };
     if (specifier === "@/lib/progress-storage") {
+      const progress = {
+        modules: moduleProgress ? { "1": moduleProgress } : {},
+      };
       return {
         addActivity: () => {},
-        getProgress: () => ({ modules: {} }),
+        getProgress: () => progress,
         markSlideVisited: () => {},
+        useProgress: () => progress,
       };
     }
     if (specifier === "@/lib/utils") return { isFocusContained: () => false };
@@ -114,8 +127,34 @@ function renderSlideViewer(slideCount) {
   );
 }
 
-test("final slide renders a truthful completion state with clear exit actions", () => {
-  const html = renderSlideViewer(1);
+test("incomplete persisted progress on the final slide shows review guidance without completion claims", () => {
+  const html = renderSlideViewer({
+    slideCount: 3,
+    initialIndex: 2,
+    moduleProgress: {
+      visitedSlideIds: ["slide-3"],
+      lastSlideId: "slide-3",
+      completed: false,
+    },
+  });
+
+  assert.doesNotMatch(html, /Module Complete/);
+  assert.doesNotMatch(html, /Module completion recorded on this device\./);
+  assert.doesNotMatch(html, /href="\/dashboard"/);
+  assert.match(html, /Review the remaining slides to complete this module\./);
+  assert.match(html, />Review Remaining Slides</);
+});
+
+test("completed persisted progress on the final slide renders truthful completion exit actions", () => {
+  const html = renderSlideViewer({
+    slideCount: 3,
+    initialIndex: 2,
+    moduleProgress: {
+      visitedSlideIds: ["slide-1", "slide-2", "slide-3"],
+      lastSlideId: "slide-3",
+      completed: true,
+    },
+  });
 
   assert.match(html, />Module Complete</);
   assert.match(html, /Module completion recorded on this device\./);
@@ -125,12 +164,21 @@ test("final slide renders a truthful completion state with clear exit actions", 
 });
 
 test("non-final slides retain Next navigation without completion UI", () => {
-  const html = renderSlideViewer(2);
+  const html = renderSlideViewer({
+    slideCount: 3,
+    initialIndex: 1,
+    moduleProgress: {
+      visitedSlideIds: ["slide-1", "slide-2"],
+      lastSlideId: "slide-2",
+      completed: false,
+    },
+  });
 
   assert.match(html, />Next</);
   assert.doesNotMatch(html, /Module Complete/);
   assert.doesNotMatch(html, /Module completion recorded on this device\./);
   assert.doesNotMatch(html, /href="\/dashboard"/);
+  assert.doesNotMatch(html, /Review the remaining slides to complete this module\./);
 });
 
 test("visiting every slide still records local module completion", () => {

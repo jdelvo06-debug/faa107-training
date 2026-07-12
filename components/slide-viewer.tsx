@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { addActivity, getProgress, markSlideVisited } from "@/lib/progress-storage";
+import { addActivity, getProgress, markSlideVisited, useProgress } from "@/lib/progress-storage";
 import type { Module, SlideContentBlock } from "@/lib/types";
 import { isFocusContained } from "@/lib/utils";
 import styles from "./modern-flight-school.module.css";
@@ -120,8 +120,15 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const shouldReduceMotion = useReducedMotion();
+  const progress = useProgress();
   const slide = courseModule.slides[index];
   const isFinalSlide = index === courseModule.slides.length - 1;
+  const moduleProgress = progress.modules[courseModule.id];
+  const isModuleComplete = moduleProgress?.completed === true;
+  const firstUnvisitedIndex = courseModule.slides.findIndex(
+    (item) => !moduleProgress?.visitedSlideIds.includes(item.id)
+  );
+  const reviewRemainingIndex = firstUnvisitedIndex === -1 ? 0 : firstUnvisitedIndex;
   const percent = useMemo(
     () => Math.round(((index + 1) / courseModule.slides.length) * 100),
     [index, courseModule.slides.length]
@@ -253,7 +260,7 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
                     ))}
                   </div>
                 ) : null}
-                {isFinalSlide ? (
+                {isFinalSlide && isModuleComplete ? (
                   <section className={styles.moduleCompletion} aria-labelledby="module-completion-heading">
                     <CircleCheckBig aria-hidden="true" />
                     <div>
@@ -275,6 +282,30 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
                         >
                           <RotateCcw className="h-4 w-4" />
                           Review Module
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                ) : null}
+                {isFinalSlide && !isModuleComplete ? (
+                  <section
+                    className={`${styles.moduleCompletion} ${styles.moduleCompletionPending}`}
+                    aria-labelledby="module-review-heading"
+                  >
+                    <RotateCcw aria-hidden="true" />
+                    <div>
+                      <p className={styles.eyebrow}>Lesson status</p>
+                      <h3 id="module-review-heading">Complete the remaining slides</h3>
+                      <p>Review the remaining slides to complete this module.</p>
+                      <div className={styles.moduleCompletionActions}>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className={styles.moduleCompletionSecondary}
+                          onClick={() => goToSlide(reviewRemainingIndex)}
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                          Review Remaining Slides
                         </Button>
                       </div>
                     </div>
