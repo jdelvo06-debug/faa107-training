@@ -2,11 +2,73 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const ts = require("typescript");
 
 const root = path.resolve(__dirname, "..");
 
 function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), "utf8");
+}
+
+function loadCallbackRoute(exchangeResult = { error: null }) {
+  const source = read("app/auth/callback/route.ts");
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+    },
+  }).outputText;
+  const exchangeCalls = [];
+  const module = { exports: {} };
+
+  const mockRequire = (specifier) => {
+    if (specifier === "next/server") {
+      return {
+        NextResponse: {
+          redirect(url) {
+            return Response.redirect(String(url), 307);
+          },
+        },
+      };
+    }
+    if (specifier === "@/lib/supabase/server") {
+      return {
+        createClient() {
+          return {
+            auth: {
+              async exchangeCodeForSession(code) {
+                exchangeCalls.push(code);
+                return exchangeResult;
+              },
+            },
+          };
+        },
+      };
+    }
+    throw new Error(`Unexpected callback dependency: ${specifier}`);
+  };
+
+  Function("require", "module", "exports", compiled)(mockRequire, module, module.exports);
+  return { GET: module.exports.GET, exchangeCalls };
+}
+
+async function runCallback({
+  origin = "https://faa107training.org",
+  code = "valid-code",
+  next,
+  headers,
+  exchangeResult,
+} = {}) {
+  const url = new URL("/auth/callback", origin);
+  if (code !== null) url.searchParams.set("code", code);
+  if (next !== undefined) url.searchParams.set("next", next);
+  const route = loadCallbackRoute(exchangeResult);
+  const response = await route.GET(new Request(url, { headers }));
+  return {
+    exchangeCalls: route.exchangeCalls,
+    location: response.headers.get("location"),
+    status: response.status,
+  };
 }
 
 test("Supabase clients use only public environment variables and cookie SSR", () => {
@@ -42,13 +104,55 @@ test("session middleware refreshes cookies without gating public routes", () => 
   assert.doesNotMatch(sessionUpdater, /\/login/);
 });
 
-test("auth callback exchanges PKCE codes and rejects unsafe next targets", () => {
-  const callback = read("app/auth/callback/route.ts");
+test("auth callback keeps successful redirects on each approved origin", async () => {
+  for (const origin of [
+    "https://faa107training.org",
+    "https://faa107-training.vercel.app",
+    "http://localhost:3000",
+  ]) {
+    const result = await runCallback({ origin, next: "/dashboard?source=oauth" });
+    assert.equal(result.status, 307);
+    assert.equal(result.location, `${origin}/dashboard?source=oauth`);
+    assert.deepEqual(result.exchangeCalls, ["valid-code"]);
+  }
+});
 
-  assert.match(callback, /exchangeCodeForSession\(code\)/);
-  assert.match(callback, /requestedNext\.startsWith\("\/"\)/);
-  assert.match(callback, /!requestedNext\.startsWith\("\/\/"\)/);
-  assert.match(callback, /auth\/auth-code-error/);
+test("auth callback rejects absolute and protocol-relative next targets", async () => {
+  for (const next of ["https://attacker.example/steal", "//attacker.example/steal"]) {
+    const result = await runCallback({
+      origin: "https://faa107-training.vercel.app",
+      next,
+    });
+    assert.equal(result.location, "https://faa107-training.vercel.app/dashboard");
+  }
+});
+
+test("host headers and unapproved request origins cannot select a redirect origin", async () => {
+  const hostileHeaders = {
+    host: "attacker.example",
+    "x-forwarded-host": "attacker.example",
+  };
+  const approvedRequest = await runCallback({ headers: hostileHeaders });
+  const unapprovedRequest = await runCallback({
+    origin: "https://attacker.example",
+    headers: hostileHeaders,
+  });
+
+  assert.equal(approvedRequest.location, "https://faa107training.org/dashboard");
+  assert.equal(unapprovedRequest.location, "https://faa107training.org/dashboard");
+});
+
+test("missing codes and failed exchanges use the same-origin auth error route", async () => {
+  const missingCode = await runCallback({ code: null });
+  const failedExchange = await runCallback({
+    origin: "https://faa107-training.vercel.app",
+    exchangeResult: { error: new Error("invalid code") },
+  });
+
+  assert.deepEqual(missingCode.exchangeCalls, []);
+  assert.equal(missingCode.location, "https://faa107training.org/auth/auth-code-error");
+  assert.deepEqual(failedExchange.exchangeCalls, ["valid-code"]);
+  assert.equal(failedExchange.location, "https://faa107-training.vercel.app/auth/auth-code-error");
 });
 
 test("auth provider exposes user state and sign out to the application shell", () => {
@@ -85,6 +189,15 @@ test("login and signup support email-password and Google without Apple", () => {
   assert.match(combined, /\/auth\/callback/);
   assert.doesNotMatch(combined, /apple/i);
   assert.match(combined, /aria-live="polite"/);
+});
+
+test("auth actions recover from unexpected throws and always reset submission state", () => {
+  const form = read("components/auth-form.tsx");
+
+  assert.match(form, /AUTH_RETRY_MESSAGE/);
+  assert.equal((form.match(/catch \{/g) ?? []).length, 2);
+  assert.equal((form.match(/finally \{/g) ?? []).length, 2);
+  assert.equal((form.match(/setSubmitting\(false\)/g) ?? []).length, 2);
 });
 
 test("logged-out dashboard sync prompt is non-blocking and leaves progress storage intact", () => {

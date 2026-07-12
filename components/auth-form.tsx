@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import styles from "./modern-flight-school.module.css";
 
 type AuthMode = "login" | "signup";
+const AUTH_RETRY_MESSAGE = "We could not reach the sign-in service. Check your connection and try again.";
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
@@ -31,48 +32,54 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     }
 
     setSubmitting(true);
+    try {
+      if (isSignup) {
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        });
 
-    if (isSignup) {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-      });
+        if (signUpError) {
+          setError(signUpError.message);
+          return;
+        }
+        if (data.session) {
+          router.push("/dashboard");
+          router.refresh();
+          return;
+        }
+        setMessage("Check your email to confirm your account, then return here to log in.");
+        return;
+      }
 
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        setError(signInError.message);
+        return;
+      }
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setError(AUTH_RETRY_MESSAGE);
+    } finally {
       setSubmitting(false);
-      if (signUpError) {
-        setError(signUpError.message);
-        return;
-      }
-      if (data.session) {
-        router.push("/dashboard");
-        router.refresh();
-        return;
-      }
-      setMessage("Check your email to confirm your account, then return here to log in.");
-      return;
     }
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-    setSubmitting(false);
-    if (signInError) {
-      setError(signInError.message);
-      return;
-    }
-    router.push("/dashboard");
-    router.refresh();
   }
 
   async function handleGoogleSignIn() {
     setError(null);
     setSubmitting(true);
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      });
 
-    if (oauthError) {
-      setError(oauthError.message);
+      if (oauthError) setError(oauthError.message);
+    } catch {
+      setError(AUTH_RETRY_MESSAGE);
+    } finally {
       setSubmitting(false);
     }
   }
