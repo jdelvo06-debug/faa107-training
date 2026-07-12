@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, ArrowRight, Check, ExternalLink, Layers, ListChecks, RotateCcw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CircleCheckBig, ExternalLink, Layers, ListChecks, RotateCcw } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -121,6 +121,7 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
   const [direction, setDirection] = useState(1);
   const shouldReduceMotion = useReducedMotion();
   const slide = courseModule.slides[index];
+  const isFinalSlide = index === courseModule.slides.length - 1;
   const percent = useMemo(
     () => Math.round(((index + 1) / courseModule.slides.length) * 100),
     [index, courseModule.slides.length]
@@ -252,6 +253,33 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
                     ))}
                   </div>
                 ) : null}
+                {isFinalSlide ? (
+                  <section className={styles.moduleCompletion} aria-labelledby="module-completion-heading">
+                    <CircleCheckBig aria-hidden="true" />
+                    <div>
+                      <p className={styles.eyebrow}>Lesson status</p>
+                      <h3 id="module-completion-heading">Module Complete</h3>
+                      <p>Module completion recorded on this device.</p>
+                      <div className={styles.moduleCompletionActions}>
+                        <Button asChild size="lg" className={styles.moduleCompletionPrimary}>
+                          <Link href="/dashboard">
+                            Return to Dashboard
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className={styles.moduleCompletionSecondary}
+                          onClick={() => goToSlide(0)}
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                          Review Module
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                ) : null}
               </motion.article>
             </AnimatePresence>
           </div>
@@ -270,13 +298,14 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
                 />
               ))}
             </div>
-            <Button
-              disabled={index === courseModule.slides.length - 1}
-              onClick={() => goToSlide(index + 1)}
-            >
-              Next
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+            {isFinalSlide ? (
+              <span className="hidden w-[88px] sm:block" aria-hidden="true" />
+            ) : (
+              <Button onClick={() => goToSlide(index + 1)}>
+                Next
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
