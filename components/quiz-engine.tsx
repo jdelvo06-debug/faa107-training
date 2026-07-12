@@ -18,6 +18,7 @@ import { applyQuizAnswer, getQuizModePolicy } from "@/lib/assessment-engine";
 import { addActivity, saveQuizAttempt } from "@/lib/progress-storage";
 import type { QuizMode, QuizQuestion } from "@/lib/types";
 import { cn, topicScores } from "@/lib/utils";
+import styles from "./modern-flight-school.module.css";
 
 export function QuizEngine({
   moduleId,
@@ -40,7 +41,7 @@ export function QuizEngine({
 
   if (questions.length === 0) {
     return (
-      <Card>
+      <Card className={styles.coursePage}>
         <CardHeader>
           <CardTitle>Quiz coming soon</CardTitle>
         </CardHeader>
@@ -63,7 +64,7 @@ export function QuizEngine({
 
   if (!mode) {
     return (
-      <Card className="border-white/10 bg-aviation-panel shadow-cockpit">
+      <Card className={`${styles.coursePage} border-white/10 bg-aviation-panel shadow-cockpit`}>
         <CardHeader>
           <Badge variant="sky" className="w-fit">Choose your quiz mode</Badge>
           <CardTitle className="text-3xl text-white">How do you want to use this quiz?</CardTitle>
@@ -126,7 +127,7 @@ export function QuizEngine({
   if (complete && saved) {
     const percent = Math.round((score / questions.length) * 100);
     return (
-      <div className="grid gap-5">
+      <div className={`${styles.coursePage} grid gap-5`}>
         <Card className="border-white/10 bg-aviation-panel shadow-cockpit">
           <CardHeader>
             <Badge variant={mode === "study" ? "sky" : "amber"} className="w-fit">
@@ -177,7 +178,7 @@ export function QuizEngine({
   }
 
   return (
-    <Card className="border-white/10 bg-aviation-panel shadow-cockpit">
+    <Card className={`${styles.coursePage} border-white/10 bg-aviation-panel shadow-cockpit`}>
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Badge variant={mode === "study" ? "sky" : "amber"}>

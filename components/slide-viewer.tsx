@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { addActivity, getProgress, markSlideVisited } from "@/lib/progress-storage";
 import type { Module, SlideContentBlock } from "@/lib/types";
 import { isFocusContained } from "@/lib/utils";
+import styles from "./modern-flight-school.module.css";
 
 function BlockRenderer({ block }: { block: SlideContentBlock }) {
   if (block.type === "paragraph") {
@@ -177,7 +178,7 @@ export function SlideViewer({ courseModule }: { courseModule: Module }) {
   }, [courseModule.slides.length]);
 
   return (
-    <div ref={containerRef} tabIndex={0} className="grid gap-5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded-lg">
+    <div ref={containerRef} tabIndex={0} className={`${styles.coursePage} grid gap-5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded-lg`}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Badge variant={courseModule.stub ? "outline" : "amber"}>{courseModule.stub ? "Content shell" : "Full lesson"}</Badge>

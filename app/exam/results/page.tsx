@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { getExamResultMessaging } from "@/lib/exam-session";
 import { useProgress } from "@/lib/progress-storage";
+import styles from "@/components/modern-flight-school.module.css";
 
 export default function ExamResultsPage() {
   const progress = useProgress();
@@ -15,9 +16,9 @@ export default function ExamResultsPage() {
 
   if (!attempt) {
     return (
-      <Card>
+      <Card className={`${styles.resultsMain} ${styles.resultsEmpty}`}>
         <CardHeader>
-          <CardTitle>No exam result yet</CardTitle>
+          <h1>No exam result yet</h1>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">Take the practice exam to see score, pass/fail, and topic breakdown here.</p>
@@ -39,14 +40,14 @@ export default function ExamResultsPage() {
     : attempt.passed ? "h-9 w-9 text-emerald-300" : "h-9 w-9 text-red-300";
 
   return (
-    <div className="grid gap-5">
-      <Card className="border-white/10 bg-aviation-panel shadow-cockpit">
+    <div className={styles.resultsMain}>
+      <Card className={styles.resultsHero}>
         <CardHeader>
           <Badge variant={attempt.variant === "practice_drill" ? "sky" : "amber"} className="w-fit">{messaging.label}</Badge>
-          <CardTitle className="flex items-center gap-3 text-4xl text-white">
+          <h1 className={styles.resultsTitle}>
             <StatusIcon className={statusIconClass} />
             {messaging.title}
-          </CardTitle>
+          </h1>
         </CardHeader>
         <CardContent className="grid gap-5">
           <div>
@@ -66,7 +67,7 @@ export default function ExamResultsPage() {
           </div>
         </CardContent>
       </Card>
-      <Card>
+      <Card className={styles.resultsPanel}>
         <CardHeader>
           <CardTitle>Topic breakdown</CardTitle>
         </CardHeader>
@@ -87,11 +88,11 @@ export default function ExamResultsPage() {
           })}
         </CardContent>
       </Card>
-      <section aria-labelledby="answer-review-heading" className="grid gap-3">
-        <h2 id="answer-review-heading" className="text-2xl font-bold text-white">Detailed answer review</h2>
+      <section aria-labelledby="answer-review-heading" className={styles.resultsReview}>
+        <h2 id="answer-review-heading">Detailed answer review</h2>
         {attempt.review && attempt.review.length > 0 ? (
           attempt.review.map((item) => (
-            <Card key={`${attempt.id}-${item.questionNumber}`} className="border-white/10 bg-white/[0.03]">
+            <Card key={`${attempt.id}-${item.questionNumber}`} className={styles.resultsAnswer}>
               <CardHeader className="pb-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-2">
@@ -123,7 +124,7 @@ export default function ExamResultsPage() {
             </Card>
           ))
         ) : (
-          <Card className="border-white/10 bg-white/[0.03]">
+          <Card className={styles.resultsAnswer}>
             <CardContent className="p-5 text-sm leading-6 text-slate-300">
               Detailed answer review is unavailable for this earlier attempt. Its saved score and topic breakdown remain available above.
             </CardContent>

@@ -1,14 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ClipboardCheck, RotateCcw, Trophy } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { ProgressRing } from "@/components/progress-ring";
+import { ArrowRight, BookOpen, CircleAlert, Clock3, Layers3, RotateCcw, Target } from "lucide-react";
 import { modules } from "@/lib/course-data";
 import { getFlashcardTotals, getOverallProgress, getResumeTarget, getTopicModuleHref, getWeakAreas } from "@/lib/progress-selectors";
 import { resetProgress, useProgress } from "@/lib/progress-storage";
+import styles from "./modern-flight-school.module.css";
 
 export function DashboardSummary() {
   const progress = useProgress();
@@ -20,102 +17,71 @@ export function DashboardSummary() {
   const latestExam = progress.examAttempts[0];
 
   return (
-    <div className="grid gap-5">
-      <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="cockpit-bezel border-white/10 bg-aviation-panel shadow-cockpit">
-          <CardContent className="grid gap-6 p-6 md:grid-cols-[auto_1fr] md:items-center">
-            <ProgressRing value={overall} label="Overall progress" />
-            <div>
-              <h1 className="text-3xl font-bold text-white">Welcome back</h1>
-              <p className="mt-2 max-w-2xl text-slate-300">
-                Your browser stores course progress locally. Continue from the latest module, quiz, or exam activity.
-              </p>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Button asChild>
-                  <Link href={target.href}>
-                    Continue
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button variant="outline" onClick={resetProgress}>
-                  <RotateCcw className="h-4 w-4" />
-                  Reset progress
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="cockpit-bezel border-white/10 bg-white/[0.03]">
-          <CardHeader>
-            <CardTitle>Snapshot</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <div>
-              <div className="mb-2 flex justify-between text-sm">
-                <span>Modules completed</span>
-                <span className="stat-mono">{completedModules}/13</span>
-              </div>
-              <Progress value={Math.round((completedModules / modules.length) * 100)} aria-label="Modules completed progress" />
-            </div>
-            <div>
-              <div className="mb-2 flex justify-between text-sm">
-                <span>Flashcards reviewed</span>
-                <span className="stat-mono">{flashcardTotals.reviewed}/{flashcardTotals.total}</span>
-              </div>
-              <Progress value={Math.round((flashcardTotals.reviewed / flashcardTotals.total) * 100)} aria-label="Flashcards reviewed progress" />
-            </div>
-            <div className="rounded-lg border border-white/10 p-4">
-              <p className="text-sm text-muted-foreground">Latest exam</p>
-              <p className="mt-1 text-2xl font-bold stat-mono">{latestExam ? `${latestExam.score}/${latestExam.total}` : "Not taken"}</p>
-            </div>
-          </CardContent>
-        </Card>
+    <div className={styles.dashboardMain}>
+      <section className={styles.dashboardIntro}>
+        <div>
+          <p className={styles.eyebrow}>Your learning dashboard</p>
+          <h1>Welcome back, pilot.</h1>
+          <p>Pick up where you left off, then use weak-area guidance to decide what deserves attention next.</p>
+        </div>
+        <div className={styles.progressSeal} aria-label={`Overall course progress: ${overall}%`}>
+          <strong>{overall}%</strong><span>course progress</span>
+        </div>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-3">
-        <Card className="cockpit-bezel bg-card/95 lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ClipboardCheck className="h-5 w-5 text-primary" />
-              Weak areas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {weakAreas.length ? (
-              weakAreas.map((area) => (
-                <Link key={area.topic} href={getTopicModuleHref(area.topic)} className="block group">
-                  <div className="mb-2 flex justify-between text-sm group-hover:text-primary transition-colors">
-                    <span>{area.topic}</span>
-                    <span className="stat-mono">{area.percent}%</span>
-                  </div>
-                  <Progress value={area.percent} aria-label={`Weak area progress for ${area.topic}`} />
-                </Link>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">Complete a quiz or exam to generate weak-area guidance.</p>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="cockpit-bezel bg-card/95">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
-              Recent activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-2">
-            {progress.recentActivity.length ? (
-              progress.recentActivity.slice(0, 4).map((activity) => (
-                <Link key={activity.id} href={activity.href} className="rounded-md border border-border p-3 text-sm hover:bg-accent">
-                  {activity.label}
-                </Link>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">Open a module, quiz, or flashcard deck to start tracking.</p>
-            )}
-          </CardContent>
-        </Card>
+      <section className={styles.resumeBand}>
+        <div>
+          <p className={styles.resumeLabel}>Next best action</p>
+          <h2>{target.label}</h2>
+          <p>Continue your current learning path before switching to another study mode.</p>
+        </div>
+        <Link href={target.href} className={styles.resumeAction}>Continue learning <ArrowRight aria-hidden="true" /></Link>
       </section>
+
+      <section className={styles.dashboardFacts} aria-label="Progress summary">
+        <div><Layers3 aria-hidden="true" /><span>Modules complete</span><strong>{completedModules}/{modules.length}</strong></div>
+        <div><BookOpen aria-hidden="true" /><span>Flashcards reviewed</span><strong>{flashcardTotals.reviewed}/{flashcardTotals.total}</strong></div>
+        <div><Target aria-hidden="true" /><span>Latest assessment</span><strong>{latestExam ? `${latestExam.score}/${latestExam.total}` : "Not taken"}</strong></div>
+      </section>
+
+      <div className={styles.dashboardGrid}>
+        <section className={styles.guidancePanel} aria-labelledby="weak-area-title">
+          <div className={styles.sectionHeading}>
+            <div><CircleAlert aria-hidden="true" /><h2 id="weak-area-title">What to review next</h2></div>
+            <Link href="/exam">Take an assessment</Link>
+          </div>
+          {weakAreas.length ? (
+            <div className={styles.guidanceList}>
+              {weakAreas.map((area) => (
+                <Link key={area.topic} href={getTopicModuleHref(area.topic)}>
+                  <span>{area.topic}</span><strong>{area.percent}%</strong><ArrowRight aria-hidden="true" />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.emptyGuidance}>
+              <Target aria-hidden="true" />
+              <div><h3>Build your first recommendation</h3><p>Complete a quiz or exam to reveal the topics that deserve another pass.</p></div>
+            </div>
+          )}
+        </section>
+
+        <section className={styles.activityPanel} aria-labelledby="activity-title">
+          <div className={styles.sectionHeading}>
+            <div><Clock3 aria-hidden="true" /><h2 id="activity-title">Recent activity</h2></div>
+          </div>
+          {progress.recentActivity.length ? (
+            <div className={styles.activityList}>
+              {progress.recentActivity.slice(0, 4).map((activity) => (
+                <Link key={activity.id} href={activity.href}>{activity.label}<ArrowRight aria-hidden="true" /></Link>
+              ))}
+            </div>
+          ) : (
+            <p className={styles.emptyActivity}>Open a lesson, quiz, or flashcard deck to begin your activity trail.</p>
+          )}
+          <button type="button" className={styles.resetButton} onClick={resetProgress}><RotateCcw aria-hidden="true" /> Reset progress</button>
+        </section>
+      </div>
     </div>
   );
 }

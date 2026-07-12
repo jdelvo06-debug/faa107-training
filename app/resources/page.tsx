@@ -2,6 +2,7 @@ import { BookOpen, ExternalLink, FileText } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import styles from "@/components/modern-flight-school.module.css";
 
 const resources = [
   {
@@ -33,7 +34,7 @@ const resources = [
 
 export default function ResourcesPage() {
   return (
-    <div className="grid gap-6">
+    <div className={`${styles.coursePage} grid gap-6`}>
       <div>
         <h1 className="text-4xl font-bold tracking-normal">Resources</h1>
         <p className="mt-2 max-w-3xl text-muted-foreground">

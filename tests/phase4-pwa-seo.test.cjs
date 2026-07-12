@@ -34,8 +34,8 @@ test("PWA manifest exposes the required standalone identity and raster icons", (
     description: "Free FAA Part 107 remote pilot certification study platform",
     start_url: "/",
     display: "standalone",
-    background_color: "#061525",
-    theme_color: "#f59e0b",
+    background_color: "#fbf7ee",
+    theme_color: "#b83a1a",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
@@ -109,7 +109,7 @@ test("root and key route metadata plus viewport cover the Phase 4 contract", () 
   assert.match(layout, /manifest:\s*"\/manifest\.webmanifest"/);
   assert.match(layout, /apple-touch-icon\.png/);
   assert.match(layout, /viewportFit:\s*"cover"/);
-  assert.match(layout, /themeColor:\s*"#f59e0b"/);
+  assert.match(layout, /themeColor:\s*"#b83a1a"/);
 
   for (const page of [
     "app/page.tsx",
@@ -123,14 +123,13 @@ test("root and key route metadata plus viewport cover the Phase 4 contract", () 
   }
 });
 
-test("safe-area CSS covers the mobile header, desktop sidebar, and content bottom", () => {
-  const shell = read("components/app-shell.tsx");
-  const css = read("app/globals.css");
+test("safe-area CSS covers the consolidated shell header and content", () => {
+  const shell = read("components/modern-flight-school-shell.tsx");
+  const css = read("components/modern-flight-school.module.css");
 
-  assert.match(shell, /app-desktop-sidebar/);
-  assert.match(shell, /app-mobile-header/);
-  assert.match(shell, /app-main-content/);
-  assert.match(css, /\.app-mobile-header[\s\S]*env\(safe-area-inset-top\)/);
-  assert.match(css, /\.app-desktop-sidebar[\s\S]*env\(safe-area-inset-left\)/);
-  assert.match(css, /\.app-main-content[\s\S]*env\(safe-area-inset-bottom\)/);
+  assert.match(shell, /styles\.flightHeader/);
+  assert.match(shell, /styles\.flightPage/);
+  assert.match(css, /\.flightHeader[\s\S]*env\(safe-area-inset-top\)/);
+  assert.match(css, /\.flightPage[\s\S]*env\(safe-area-inset-left\)/);
+  assert.match(css, /\.flightPage main[\s\S]*env\(safe-area-inset-bottom\)/);
 });

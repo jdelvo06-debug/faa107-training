@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Card, CardContent } from "@/components/ui/card";
+import styles from "@/components/modern-flight-school.module.css";
 
 export const metadata: Metadata = {
   title: "About the FAA Part 107 Training Platform",
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="grid gap-6">
+    <div className={`${styles.coursePage} grid gap-6`}>
       <div>
         <h1 className="text-4xl font-bold tracking-normal">About this course</h1>
         <p className="mt-2 max-w-3xl text-muted-foreground">

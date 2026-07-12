@@ -6,6 +6,7 @@ import { moduleHref } from "@/lib/learning-routes";
 import { useProgress } from "@/lib/progress-storage";
 import { findRecommendedDay } from "@/lib/progress-selectors";
 import { cn } from "@/lib/utils";
+import styles from "./modern-flight-school.module.css";
 
 const modules = [
   { num: 1, title: "Welcome & Getting Started" },
@@ -102,7 +103,7 @@ export function StudyPlan() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl grid gap-8">
+    <div className={`${styles.coursePage} mx-auto max-w-4xl grid gap-8`}>
       <div>
         <h1 className="text-4xl font-bold tracking-normal">Study Plan</h1>
         <p className="mt-2 max-w-3xl text-muted-foreground">
