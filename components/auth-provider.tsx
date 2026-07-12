@@ -117,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function resetProgress() {
+    if (loading) throw new Error("Account status is still loading. Please try again.");
     if (!user) {
       resetLocalProgress();
       return;

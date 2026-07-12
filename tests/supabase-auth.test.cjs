@@ -24,6 +24,120 @@ function flushPromises() {
   return new Promise((resolve) => setImmediate(resolve));
 }
 
+function renderDashboard({ user, loading, resetProgress }) {
+  const source = read("components/dashboard-summary.tsx");
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      jsx: ts.JsxEmit.ReactJSX,
+      esModuleInterop: true,
+    },
+  }).outputText;
+  const stateSlots = [];
+  let hookIndex = 0;
+  const confirmations = [];
+  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  Object.defineProperty(globalThis, "window", { configurable: true, value: {
+    confirm(message) {
+      confirmations.push(message);
+      return true;
+    },
+  } });
+
+  const react = {
+    useState(initialValue) {
+      const index = hookIndex++;
+      if (!(index in stateSlots)) stateSlots[index] = initialValue;
+      return [stateSlots[index], (value) => {
+        stateSlots[index] = typeof value === "function" ? value(stateSlots[index]) : value;
+      }];
+    },
+  };
+  const progress = {
+    version: 1,
+    modules: {},
+    quizAttempts: [],
+    flashcards: {},
+    examAttempts: [],
+    recentActivity: [],
+  };
+  const mockRequire = (specifier) => {
+    if (specifier === "react") return react;
+    if (specifier === "react/jsx-runtime") {
+      return { jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) };
+    }
+    if (specifier === "next/link") return "Link";
+    if (specifier === "lucide-react") {
+      return new Proxy({}, { get: (_target, key) => String(key) });
+    }
+    if (specifier === "@/components/auth-provider") {
+      return { useAuth: () => ({ user, loading, resetProgress }) };
+    }
+    if (specifier === "@/lib/course-data") return { modules: [] };
+    if (specifier === "@/lib/progress-selectors") {
+      return {
+        getFlashcardTotals: () => ({ reviewed: 0, total: 0 }),
+        getOverallProgress: () => 0,
+        getResumeTarget: () => ({ href: "/modules/1", label: "Start Module 1" }),
+        getTopicModuleHref: () => "/modules",
+        getWeakAreas: () => [],
+      };
+    }
+    if (specifier === "@/lib/progress-storage") return { useProgress: () => progress };
+    if (specifier === "./modern-flight-school.module.css") {
+      return {
+        __esModule: true,
+        default: new Proxy({}, { get: (_target, key) => String(key) }),
+      };
+    }
+    throw new Error(`Unexpected dashboard dependency: ${specifier}`);
+  };
+  const module = { exports: {} };
+  Function("require", "module", "exports", compiled)(mockRequire, module, module.exports);
+
+  function findNode(node, predicate) {
+    if (Array.isArray(node)) {
+      for (const child of node) {
+        const match = findNode(child, predicate);
+        if (match) return match;
+      }
+      return null;
+    }
+    if (!node || typeof node !== "object") return null;
+    if (predicate(node)) return node;
+    return findNode(node.props?.children, predicate);
+  }
+
+  function textContent(node) {
+    if (Array.isArray(node)) return node.map(textContent).join("");
+    if (node === null || node === undefined || typeof node === "boolean") return "";
+    if (typeof node !== "object") return String(node);
+    return textContent(node.props?.children);
+  }
+
+  function render() {
+    hookIndex = 0;
+    return module.exports.DashboardSummary();
+  }
+
+  return {
+    confirmations,
+    findResetButton(tree = render()) {
+      return findNode(tree, (node) => node.type === "button" && node.props.className === "resetButton");
+    },
+    findResetStatus(tree = render()) {
+      return findNode(tree, (node) => node.props?.className === "resetStatus");
+    },
+    render,
+    restore() {
+      if (originalWindow) Object.defineProperty(globalThis, "window", originalWindow);
+      else delete globalThis.window;
+    },
+    textContent,
+  };
+}
+
 function mountAuthProvider() {
   const source = read("components/auth-provider.tsx");
   const compiled = ts.transpileModule(source, {
@@ -376,6 +490,16 @@ test("auth context reset uses the coordinator for a signed-in learner and stays 
   anonymous.unmount();
 });
 
+test("auth context rejects reset while identity is unresolved without touching either reset path", async () => {
+  const unresolved = mountAuthProvider();
+
+  assert.equal(unresolved.loading, true);
+  await assert.rejects(unresolved.context.resetProgress(), /account status is still loading/i);
+  assert.equal(unresolved.resetCalls, 0);
+  assert.equal(unresolved.localResetCalls, 0);
+  unresolved.unmount();
+});
+
 test("authenticated progress sync status is compact, polite, and uses exact truthful copy", () => {
   const shell = read("components/modern-flight-school-shell.tsx");
 
@@ -391,16 +515,77 @@ test("authenticated progress sync status is compact, polite, and uses exact trut
   assert.doesNotMatch(shell, /toast|dialog|modal/i);
 });
 
-test("dashboard reset distinguishes account-wide RPC reset from browser-only anonymous reset", () => {
+test("dashboard reset distinguishes account-wide RPC reset from browser-only anonymous reset", async () => {
   const dashboard = read("components/dashboard-summary.tsx");
 
   assert.match(dashboard, /Reset progress\? This removes saved progress from this account across devices\. This cannot be undone\./);
   assert.match(dashboard, /Reset progress\? This removes saved progress from this browser only\. This cannot be undone\./);
   assert.match(dashboard, /await resetProgress\(\)/);
-  assert.match(dashboard, /disabled=\{resetting\}/);
+  assert.match(dashboard, /disabled=\{loading \|\| resetting\}/);
+  assert.match(dashboard, /Checking account…/);
   assert.match(dashboard, /Resetting progress…/);
   assert.match(dashboard, /Reset failed\. Your progress was not changed\. Please try again\./);
   assert.match(dashboard, /aria-live="polite"/);
+
+  let signedInResets = 0;
+  const signedIn = renderDashboard({
+    user: { id: "11111111-1111-4111-8111-111111111111" },
+    loading: false,
+    async resetProgress() { signedInResets += 1; },
+  });
+  await signedIn.findResetButton().props.onClick();
+  assert.deepEqual(signedIn.confirmations, [
+    "Reset progress? This removes saved progress from this account across devices. This cannot be undone.",
+  ]);
+  assert.equal(signedInResets, 1);
+  signedIn.restore();
+
+  let anonymousResets = 0;
+  const anonymous = renderDashboard({
+    user: null,
+    loading: false,
+    async resetProgress() { anonymousResets += 1; },
+  });
+  await anonymous.findResetButton().props.onClick();
+  assert.deepEqual(anonymous.confirmations, [
+    "Reset progress? This removes saved progress from this browser only. This cannot be undone.",
+  ]);
+  assert.equal(anonymousResets, 1);
+  anonymous.restore();
+});
+
+test("dashboard reset stays inert while auth is unresolved and preserves pending and failure states", async () => {
+  let unresolvedResets = 0;
+  const unresolved = renderDashboard({
+    user: null,
+    loading: true,
+    async resetProgress() { unresolvedResets += 1; },
+  });
+  const unresolvedButton = unresolved.findResetButton();
+  assert.equal(unresolvedButton.props.disabled, true);
+  assert.match(unresolved.textContent(unresolvedButton), /Checking account…/);
+  await unresolvedButton.props.onClick();
+  assert.deepEqual(unresolved.confirmations, []);
+  assert.equal(unresolvedResets, 0);
+  unresolved.restore();
+
+  const pendingReset = deferred();
+  const failure = renderDashboard({
+    user: { id: "11111111-1111-4111-8111-111111111111" },
+    loading: false,
+    resetProgress: () => pendingReset.promise,
+  });
+  const resetAttempt = failure.findResetButton().props.onClick();
+  const pendingButton = failure.findResetButton();
+  assert.equal(pendingButton.props.disabled, true);
+  assert.match(failure.textContent(pendingButton), /Resetting progress…/);
+  pendingReset.reject(new Error("offline"));
+  await resetAttempt;
+  assert.match(
+    failure.textContent(failure.findResetStatus()),
+    /Reset failed\. Your progress was not changed\. Please try again\./,
+  );
+  failure.restore();
 });
 
 test("a newer auth event prevents a deferred initial user from reactivating the old owner", async () => {

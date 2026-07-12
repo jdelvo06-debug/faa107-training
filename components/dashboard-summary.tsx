@@ -22,6 +22,7 @@ export function DashboardSummary() {
   const latestExam = progress.examAttempts[0];
 
   async function handleResetProgress() {
+    if (loading || resetting) return;
     const confirmation = user
       ? "Reset progress? This removes saved progress from this account across devices. This cannot be undone."
       : "Reset progress? This removes saved progress from this browser only. This cannot be undone.";
@@ -108,8 +109,8 @@ export function DashboardSummary() {
           ) : (
             <p className={styles.emptyActivity}>Open a lesson, quiz, or flashcard deck to begin your activity trail.</p>
           )}
-          <button type="button" className={styles.resetButton} onClick={handleResetProgress} disabled={resetting}>
-            <RotateCcw aria-hidden="true" /> {resetting ? "Resetting progress…" : "Reset progress"}
+          <button type="button" className={styles.resetButton} onClick={handleResetProgress} disabled={loading || resetting}>
+            <RotateCcw aria-hidden="true" /> {loading ? "Checking account…" : resetting ? "Resetting progress…" : "Reset progress"}
           </button>
           <p className={styles.resetStatus} role="status" aria-live="polite">{resetError}</p>
         </section>
