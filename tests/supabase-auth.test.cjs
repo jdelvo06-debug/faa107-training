@@ -161,6 +161,15 @@ test("auth provider exposes user state and sign out to the application shell", (
   const shell = read("components/modern-flight-school-shell.tsx");
 
   assert.match(provider, /onAuthStateChange/);
+  assert.match(provider, /createProgressSyncCoordinator/);
+  assert.match(provider, /authTokenChanged/);
+  assert.match(provider, /subscribeProgressWrites/);
+  assert.match(provider, /visibilitychange/);
+  assert.match(provider, /pagehide/);
+  assert.match(provider, /online/);
+  assert.match(provider, /focus/);
+  assert.match(provider, /progressSync/);
+  assert.doesNotMatch(provider, /resetProgress/);
   assert.match(provider, /signOut/);
   assert.match(provider, /\.catch\(\(\) => \{[\s\S]*setLoading\(false\)/);
   assert.match(layout, /<AuthProvider>/);

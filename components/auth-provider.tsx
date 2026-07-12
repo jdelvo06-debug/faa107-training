@@ -1,13 +1,21 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { createProgressRpcAdapter } from "@/lib/progress-rpc";
+import {
+  createProgressSyncCoordinator,
+  type ProgressSyncCoordinator,
+  type ProgressSyncSnapshot,
+} from "@/lib/progress-sync";
+import { setProgressOwner, subscribeProgressWrites } from "@/lib/progress-storage";
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
+  progressSync: ProgressSyncSnapshot;
   signOut: () => Promise<void>;
 }
 
@@ -18,15 +26,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [supabase] = useState(createClient);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [progressSync, setProgressSync] = useState<ProgressSyncSnapshot>({
+    status: "idle",
+    userId: null,
+    message: null,
+  });
+  const coordinatorRef = useRef<ProgressSyncCoordinator | null>(null);
 
   useEffect(() => {
     let mounted = true;
+    const storage = {
+      getItem: (key: string) => window.localStorage.getItem(key),
+      setItem: (key: string, value: string) => window.localStorage.setItem(key, value),
+      removeItem: (key: string) => window.localStorage.removeItem(key),
+    };
+    const coordinator = createProgressSyncCoordinator({
+      rpc: createProgressRpcAdapter(supabase),
+      storage,
+      locks: navigator.locks,
+      setProgressOwner,
+      notifyProgress: () => window.dispatchEvent(new Event("faa107-progress")),
+    });
+    coordinatorRef.current = coordinator;
+    const unsubscribeSync = coordinator.subscribe((next) => {
+      if (mounted) setProgressSync(next);
+    });
+    const unsubscribeWrites = subscribeProgressWrites((_progress, ownerUserId) => {
+      if (ownerUserId) coordinator.localWrite();
+    });
+
+    const flushOnline = () => { void coordinator.flush("online").catch(() => {}); };
+    const flushVisibility = () => {
+      void coordinator.flush(document.visibilityState === "hidden" ? "visibility" : "online").catch(() => {});
+    };
+    const flushPagehide = () => { void coordinator.flush("pagehide").catch(() => {}); };
+    window.addEventListener("online", flushOnline);
+    window.addEventListener("focus", flushOnline);
+    document.addEventListener("visibilitychange", flushVisibility);
+    window.addEventListener("pagehide", flushPagehide);
 
     void supabase.auth.getUser()
       .then(({ data }) => {
         if (mounted) {
           setUser(data.user);
           setLoading(false);
+          void coordinator.authChanged(data.user).catch(() => {});
         }
       })
       .catch(() => {
@@ -39,12 +83,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (mounted) {
         setUser(session?.user ?? null);
         setLoading(false);
+        void coordinator.authChanged(session?.user ?? null).catch(() => {});
+        if (session?.access_token) {
+          void coordinator.authTokenChanged(session.access_token).catch(() => {});
+        }
       }
     });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      unsubscribeSync();
+      unsubscribeWrites();
+      window.removeEventListener("online", flushOnline);
+      window.removeEventListener("focus", flushOnline);
+      document.removeEventListener("visibilitychange", flushVisibility);
+      window.removeEventListener("pagehide", flushPagehide);
+      coordinator.dispose();
+      if (coordinatorRef.current === coordinator) coordinatorRef.current = null;
     };
   }, [supabase]);
 
@@ -55,7 +111,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.refresh();
   }
 
-  return <AuthContext.Provider value={{ user, loading, signOut }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, loading, progressSync, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
