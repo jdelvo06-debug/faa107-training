@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let authGeneration = 0;
     const storage = {
       getItem: (key: string) => window.localStorage.getItem(key),
       setItem: (key: string, value: string) => window.localStorage.setItem(key, value),
@@ -65,22 +66,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     document.addEventListener("visibilitychange", flushVisibility);
     window.addEventListener("pagehide", flushPagehide);
 
+    const initialAuthGeneration = authGeneration;
     void supabase.auth.getUser()
       .then(({ data }) => {
-        if (mounted) {
+        if (mounted && authGeneration === initialAuthGeneration) {
           setUser(data.user);
           setLoading(false);
           void coordinator.authChanged(data.user).catch(() => {});
         }
       })
       .catch(() => {
-        if (mounted) setLoading(false);
+        if (mounted && authGeneration === initialAuthGeneration) setLoading(false);
       });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (mounted) {
+        authGeneration += 1;
         setUser(session?.user ?? null);
         setLoading(false);
         void coordinator.authChanged(session?.user ?? null).catch(() => {});
@@ -92,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mounted = false;
+      authGeneration += 1;
       subscription.unsubscribe();
       unsubscribeSync();
       unsubscribeWrites();

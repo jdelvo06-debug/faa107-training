@@ -10,6 +10,158 @@ function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), "utf8");
 }
 
+function deferred() {
+  let resolve;
+  const promise = new Promise((resolvePromise) => {
+    resolve = resolvePromise;
+  });
+  return { promise, resolve };
+}
+
+function flushPromises() {
+  return new Promise((resolve) => setImmediate(resolve));
+}
+
+function mountAuthProvider() {
+  const source = read("components/auth-provider.tsx");
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      jsx: ts.JsxEmit.ReactJSX,
+      esModuleInterop: true,
+    },
+  }).outputText;
+  const lookup = deferred();
+  const authChanges = [];
+  const tokenChanges = [];
+  const stateSlots = [];
+  const refSlots = [];
+  const effects = [];
+  const listeners = new Map();
+  let hookIndex = 0;
+  let authListener = null;
+  let disposed = false;
+  let unsubscribed = false;
+
+  const coordinator = {
+    authChanged(user) {
+      authChanges.push(user?.id ?? null);
+      return Promise.resolve();
+    },
+    authTokenChanged(token) {
+      tokenChanges.push(token);
+      return Promise.resolve();
+    },
+    localWrite() {},
+    reset() { return Promise.resolve(); },
+    flush() { return Promise.resolve(); },
+    subscribe(listener) {
+      listener({ status: "idle", userId: null, message: null });
+      return () => {};
+    },
+    dispose() { disposed = true; },
+  };
+  const supabase = {
+    auth: {
+      getUser() { return lookup.promise; },
+      onAuthStateChange(listener) {
+        authListener = listener;
+        return { data: { subscription: { unsubscribe() { unsubscribed = true; } } } };
+      },
+      async signOut() { return { error: null }; },
+    },
+  };
+  const react = {
+    createContext(defaultValue) {
+      return { defaultValue, Provider: Symbol("Provider") };
+    },
+    useContext(context) { return context.defaultValue; },
+    useState(initialValue) {
+      const index = hookIndex++;
+      if (!(index in stateSlots)) {
+        stateSlots[index] = typeof initialValue === "function" ? initialValue() : initialValue;
+      }
+      return [stateSlots[index], (value) => {
+        stateSlots[index] = typeof value === "function" ? value(stateSlots[index]) : value;
+      }];
+    },
+    useRef(initialValue) {
+      const index = hookIndex++;
+      if (!refSlots[index]) refSlots[index] = { current: initialValue };
+      return refSlots[index];
+    },
+    useEffect(effect) { effects.push(effect); },
+  };
+  const mockRequire = (specifier) => {
+    if (specifier === "react") return react;
+    if (specifier === "react/jsx-runtime") {
+      return { jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) };
+    }
+    if (specifier === "next/navigation") return { useRouter: () => ({ refresh() {} }) };
+    if (specifier === "@/lib/supabase/client") return { createClient: () => supabase };
+    if (specifier === "@/lib/progress-rpc") return { createProgressRpcAdapter: () => ({}) };
+    if (specifier === "@/lib/progress-sync") return { createProgressSyncCoordinator: () => coordinator };
+    if (specifier === "@/lib/progress-storage") {
+      return { setProgressOwner() {}, subscribeProgressWrites: () => () => {} };
+    }
+    throw new Error(`Unexpected provider dependency: ${specifier}`);
+  };
+
+  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  const originalDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
+  const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+  const storage = new Map();
+  Object.defineProperty(globalThis, "window", { configurable: true, value: {
+    localStorage: {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, value),
+      removeItem: (key) => storage.delete(key),
+    },
+    addEventListener(type, listener) { listeners.set(`window:${type}`, listener); },
+    removeEventListener(type) { listeners.delete(`window:${type}`); },
+    dispatchEvent() {},
+  } });
+  Object.defineProperty(globalThis, "document", { configurable: true, value: {
+    visibilityState: "visible",
+    addEventListener(type, listener) { listeners.set(`document:${type}`, listener); },
+    removeEventListener(type) { listeners.delete(`document:${type}`); },
+  } });
+  Object.defineProperty(globalThis, "navigator", { configurable: true, value: { locks: null } });
+
+  const module = { exports: {} };
+  Function("require", "module", "exports", compiled)(mockRequire, module, module.exports);
+  hookIndex = 0;
+  module.exports.AuthProvider({ children: "content" });
+  assert.equal(effects.length, 1);
+  const cleanupEffect = effects[0]();
+
+  function restoreGlobal(name, descriptor) {
+    if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+    else delete globalThis[name];
+  }
+
+  return {
+    authChanges,
+    tokenChanges,
+    lookup,
+    emitAuth(user, accessToken = "token") {
+      assert.ok(authListener);
+      authListener("SIGNED_IN", { user, access_token: accessToken });
+    },
+    get user() { return stateSlots[1]; },
+    get loading() { return stateSlots[2]; },
+    get disposed() { return disposed; },
+    get unsubscribed() { return unsubscribed; },
+    unmount() {
+      cleanupEffect();
+      restoreGlobal("window", originalWindow);
+      restoreGlobal("document", originalDocument);
+      restoreGlobal("navigator", originalNavigator);
+    },
+  };
+}
+
 function loadCallbackRoute(exchangeResult = { error: null }) {
   const source = read("app/auth/callback/route.ts");
   const compiled = ts.transpileModule(source, {
@@ -179,6 +331,48 @@ test("auth provider exposes user state and sign out to the application shell", (
   assert.match(shell, /Sign out/);
   assert.match(shell, /authControlsDesktop/);
   assert.match(shell, /authControlsMobile/);
+});
+
+test("a newer auth event prevents a deferred initial user from reactivating the old owner", async () => {
+  const provider = mountAuthProvider();
+  const userA = { id: "11111111-1111-4111-8111-111111111111" };
+  const userB = { id: "22222222-2222-4222-8222-222222222222" };
+  provider.emitAuth(userB, "token-b");
+  await flushPromises();
+  provider.lookup.resolve({ data: { user: userA } });
+  await flushPromises();
+
+  assert.equal(provider.user, userB);
+  assert.equal(provider.loading, false);
+  assert.deepEqual(provider.authChanges, [userB.id]);
+  assert.deepEqual(provider.tokenChanges, ["token-b"]);
+  provider.unmount();
+});
+
+test("unmount invalidates a deferred initial user lookup", async () => {
+  const provider = mountAuthProvider();
+  const userA = { id: "11111111-1111-4111-8111-111111111111" };
+  provider.unmount();
+  provider.lookup.resolve({ data: { user: userA } });
+  await flushPromises();
+
+  assert.equal(provider.user, null);
+  assert.equal(provider.loading, true);
+  assert.deepEqual(provider.authChanges, []);
+  assert.equal(provider.disposed, true);
+  assert.equal(provider.unsubscribed, true);
+});
+
+test("initial user discovery initializes the provider when no auth event supersedes it", async () => {
+  const provider = mountAuthProvider();
+  const userA = { id: "11111111-1111-4111-8111-111111111111" };
+  provider.lookup.resolve({ data: { user: userA } });
+  await flushPromises();
+
+  assert.equal(provider.user, userA);
+  assert.equal(provider.loading, false);
+  assert.deepEqual(provider.authChanges, [userA.id]);
+  provider.unmount();
 });
 
 test("login and signup support email-password and Google without Apple", () => {
