@@ -1,0 +1,157 @@
+{
+  "normalization": [
+    {
+      "name": "legacy version one strips unknown fields and recomputes module completion",
+      "input": {
+        "ignored": true,
+        "modules": {
+          "1": {
+            "visitedSlideIds": ["m1-2", "m1-1", "m1-1", "unknown-slide"],
+            "lastSlideId": "m1-2",
+            "completed": true,
+            "ignored": "value"
+          },
+          "unknown": {
+            "visitedSlideIds": ["m1-1"],
+            "completed": true
+          }
+        },
+        "quizAttempts": "malformed",
+        "flashcards": null,
+        "examAttempts": {},
+        "recentActivity": false
+      },
+      "expected": {
+        "version": 1,
+        "modules": {
+          "1": {
+            "visitedSlideIds": ["m1-1", "m1-2"],
+            "completed": false,
+            "lastSlideId": "m1-2"
+          }
+        },
+        "quizAttempts": [],
+        "flashcards": {},
+        "examAttempts": [],
+        "recentActivity": []
+      }
+    }
+  ],
+  "merge": [
+    {
+      "name": "module visits attempts and timestamped flashcards converge",
+      "local": {
+        "version": 1,
+        "modules": {
+          "1": {
+            "visitedSlideIds": ["m1-1"],
+            "completed": false,
+            "lastSlideId": "m1-1",
+            "updatedAt": "2026-07-12T10:00:00.000Z"
+          }
+        },
+        "quizAttempts": [
+          {
+            "id": "00000000-0000-4000-8000-000000000001",
+            "moduleId": "1",
+            "score": 1,
+            "total": 2,
+            "topicScores": {
+              "Operations": { "correct": 1, "total": 2 }
+            },
+            "completedAt": "2026-07-12T10:00:00.000Z"
+          }
+        ],
+        "flashcards": {
+          "1": {
+            "known": ["fc-1-ftn"],
+            "unknown": [],
+            "reviewedAt": {
+              "fc-1-ftn": "2026-07-12T10:00:00.000Z"
+            }
+          }
+        },
+        "examAttempts": [],
+        "recentActivity": []
+      },
+      "remote": {
+        "version": 1,
+        "modules": {
+          "1": {
+            "visitedSlideIds": ["m1-2"],
+            "completed": false,
+            "lastSlideId": "m1-2",
+            "updatedAt": "2026-07-12T11:00:00.000Z"
+          }
+        },
+        "quizAttempts": [
+          {
+            "id": "00000000-0000-4000-8000-000000000002",
+            "moduleId": "1",
+            "score": 2,
+            "total": 2,
+            "topicScores": {
+              "Operations": { "correct": 2, "total": 2 }
+            },
+            "completedAt": "2026-07-12T11:00:00.000Z"
+          }
+        ],
+        "flashcards": {
+          "1": {
+            "known": [],
+            "unknown": ["fc-1-ftn"],
+            "reviewedAt": {
+              "fc-1-ftn": "2026-07-12T11:00:00.000Z"
+            }
+          }
+        },
+        "examAttempts": [],
+        "recentActivity": []
+      },
+      "expected": {
+        "version": 1,
+        "modules": {
+          "1": {
+            "visitedSlideIds": ["m1-1", "m1-2"],
+            "completed": false,
+            "lastSlideId": "m1-2",
+            "updatedAt": "2026-07-12T11:00:00.000Z"
+          }
+        },
+        "quizAttempts": [
+          {
+            "id": "00000000-0000-4000-8000-000000000002",
+            "moduleId": "1",
+            "score": 2,
+            "total": 2,
+            "topicScores": {
+              "Operations": { "correct": 2, "total": 2 }
+            },
+            "completedAt": "2026-07-12T11:00:00.000Z"
+          },
+          {
+            "id": "00000000-0000-4000-8000-000000000001",
+            "moduleId": "1",
+            "score": 1,
+            "total": 2,
+            "topicScores": {
+              "Operations": { "correct": 1, "total": 2 }
+            },
+            "completedAt": "2026-07-12T10:00:00.000Z"
+          }
+        ],
+        "flashcards": {
+          "1": {
+            "known": [],
+            "unknown": ["fc-1-ftn"],
+            "reviewedAt": {
+              "fc-1-ftn": "2026-07-12T11:00:00.000Z"
+            }
+          }
+        },
+        "examAttempts": [],
+        "recentActivity": []
+      }
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type {
+  AuthenticatedProgressCacheEnvelope,
   ExamAttempt,
   FlashcardProgress,
   ProgressState,
@@ -17,6 +18,11 @@ import {
 
 const STORAGE_KEY = "faa107-progress-v1";
 const ACTIVE_EXAM_KEY = "faa107-active-exam-v1";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const DECIMAL_PATTERN = /^(0|[1-9][0-9]*)$/;
+
+let activeProgressOwnerUserId: string | null = null;
+const progressWriteListeners = new Set<(progress: ProgressState, ownerUserId: string | null) => void>();
 
 export const emptyProgress: ProgressState = {
   version: 1,
@@ -51,14 +57,62 @@ function normalizeProgress(value: unknown): ProgressState {
   };
 }
 
+function progressKey() {
+  return activeProgressOwnerUserId ? `${STORAGE_KEY}:${activeProgressOwnerUserId}` : STORAGE_KEY;
+}
+
+function isAuthenticatedEnvelope(value: unknown): value is AuthenticatedProgressCacheEnvelope {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const envelope = value as Partial<AuthenticatedProgressCacheEnvelope>;
+  if (envelope.envelopeVersion !== 1 || !envelope.progress || envelope.progress.version !== 1) {
+    return false;
+  }
+  const neverSynced = envelope.resetGeneration === null
+    && envelope.resetEpoch === null
+    && envelope.revision === null
+    && envelope.baseProgress === null;
+  const tagged = typeof envelope.resetGeneration === "string"
+    && UUID_PATTERN.test(envelope.resetGeneration)
+    && typeof envelope.resetEpoch === "string"
+    && DECIMAL_PATTERN.test(envelope.resetEpoch)
+    && typeof envelope.revision === "string"
+    && DECIMAL_PATTERN.test(envelope.revision)
+    && Boolean(envelope.baseProgress)
+    && envelope.baseProgress?.version === 1;
+  return neverSynced || tagged;
+}
+
+export function setProgressOwner(userId: string | null) {
+  if (userId !== null && !UUID_PATTERN.test(userId)) {
+    throw new Error("Progress owner must be a valid lowercase UUID");
+  }
+  activeProgressOwnerUserId = userId;
+}
+
+export function getProgressOwner() {
+  return activeProgressOwnerUserId;
+}
+
+export function subscribeProgressWrites(
+  listener: (progress: ProgressState, ownerUserId: string | null) => void,
+) {
+  progressWriteListeners.add(listener);
+  return () => progressWriteListeners.delete(listener);
+}
+
 export function getProgress(): ProgressState {
   if (!isBrowser()) {
     return emptyProgress;
   }
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? normalizeProgress(JSON.parse(raw)) : emptyProgress;
+    const raw = window.localStorage.getItem(progressKey());
+    if (!raw) return emptyProgress;
+    const parsed = JSON.parse(raw) as unknown;
+    if (activeProgressOwnerUserId) {
+      return isAuthenticatedEnvelope(parsed) ? normalizeProgress(parsed.progress) : emptyProgress;
+    }
+    return normalizeProgress(parsed);
   } catch {
     return emptyProgress;
   }
@@ -69,8 +123,34 @@ export function saveProgress(progress: ProgressState) {
     return;
   }
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  const key = progressKey();
+  if (activeProgressOwnerUserId) {
+    const raw = window.localStorage.getItem(key);
+    let envelope: AuthenticatedProgressCacheEnvelope;
+    if (raw === null) {
+      envelope = {
+        envelopeVersion: 1,
+        progress,
+        resetGeneration: null,
+        resetEpoch: null,
+        revision: null,
+        baseProgress: null,
+      };
+    } else {
+      const parsed = JSON.parse(raw) as unknown;
+      if (!isAuthenticatedEnvelope(parsed)) {
+        throw new Error("Cannot overwrite an unverified authenticated cache");
+      }
+      envelope = { ...parsed, progress };
+    }
+    window.localStorage.setItem(key, JSON.stringify(envelope));
+  } else {
+    window.localStorage.setItem(key, JSON.stringify(progress));
+  }
   window.dispatchEvent(new Event("faa107-progress"));
+  progressWriteListeners.forEach((listener) => {
+    listener(progress, activeProgressOwnerUserId);
+  });
 }
 
 export function updateProgress(updater: (current: ProgressState) => ProgressState) {
@@ -100,15 +180,17 @@ export function markSlideVisited(moduleId: string, slideId: string, totalSlides:
       completed: false
     };
     const visitedSlideIds = unique([...existing.visitedSlideIds, slideId]);
+    const nextModule = {
+      visitedSlideIds,
+      lastSlideId: slideId,
+      completed: visitedSlideIds.length >= totalSlides,
+      ...(slideId.startsWith(`m${moduleId}-`) ? { updatedAt: new Date().toISOString() } : {}),
+    };
     return {
       ...current,
       modules: {
         ...current.modules,
-        [moduleId]: {
-          visitedSlideIds,
-          lastSlideId: slideId,
-          completed: visitedSlideIds.length >= totalSlides
-        }
+        [moduleId]: nextModule,
       }
     };
   });
@@ -236,16 +318,35 @@ export function completeExamAttempt(
 }
 
 export function saveFlashcardProgress(moduleId: string, progress: FlashcardProgress) {
-  updateProgress((current) => ({
-    ...current,
-    flashcards: {
-      ...current.flashcards,
-      [moduleId]: {
-        known: unique(progress.known),
-        unknown: unique(progress.unknown)
-      }
-    }
-  }));
+  updateProgress((current) => {
+    const existing = current.flashcards[moduleId] ?? { known: [], unknown: [] };
+    const known = unique(progress.known);
+    const unknown = unique(progress.unknown).filter((cardId) => !known.includes(cardId));
+    const previousState = new Map<string, "known" | "unknown">([
+      ...existing.known.map((cardId) => [cardId, "known"] as const),
+      ...existing.unknown.map((cardId) => [cardId, "unknown"] as const),
+    ]);
+    const nextState = new Map<string, "known" | "unknown">([
+      ...known.map((cardId) => [cardId, "known"] as const),
+      ...unknown.map((cardId) => [cardId, "unknown"] as const),
+    ]);
+    const reviewedAt = { ...(existing.reviewedAt ?? {}), ...(progress.reviewedAt ?? {}) };
+    const timestamp = new Date().toISOString();
+    nextState.forEach((state, cardId) => {
+      if (previousState.get(cardId) !== state) reviewedAt[cardId] = timestamp;
+    });
+    return {
+      ...current,
+      flashcards: {
+        ...current.flashcards,
+        [moduleId]: {
+          known,
+          unknown,
+          ...(Object.keys(reviewedAt).length ? { reviewedAt } : {}),
+        },
+      },
+    };
+  });
 }
 
 export function resetProgress() {
