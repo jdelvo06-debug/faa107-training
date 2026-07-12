@@ -404,3 +404,58 @@ test("interactive final-slide recovery persists completion before exposing compl
     await stopNextApp(app.child);
   }
 });
+
+test("the modules page hydrates saved local progress cleanly at 390px", { timeout: 120_000 }, async () => {
+  const port = await getAvailablePort();
+  const origin = `http://127.0.0.1:${port}`;
+  const app = startNextApp(port);
+  let browser;
+
+  try {
+    await waitForNextApp(`${origin}/modules`, app.child, app.output);
+    browser = await launchTestBrowser();
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await context.addInitScript(() => {
+      window.localStorage.setItem("faa107-progress-v1", JSON.stringify({
+        version: 1,
+        modules: {
+          "1": { visitedSlideIds: ["m1-1", "m1-2", "m1-3", "m1-4", "m1-5", "m1-6", "m1-7", "m1-8"], completed: true },
+          "2": { visitedSlideIds: ["m2-1", "m2-2", "m2-3", "m2-4", "m2-5", "m2-6", "m2-7", "m2-8"], completed: true },
+          "3": { visitedSlideIds: ["m3-1"], completed: false },
+        },
+        quizAttempts: [
+          { id: "latest", moduleId: "3", score: 8, total: 10, completedAt: "2026-07-12T14:00:00.000Z", topicScores: {} },
+          { id: "older", moduleId: "3", score: 4, total: 10, completedAt: "2026-07-11T14:00:00.000Z", topicScores: {} },
+        ],
+        flashcards: {},
+        examAttempts: [],
+        recentActivity: [],
+      }));
+    });
+    const page = await context.newPage();
+    const browserErrors = [];
+    page.on("console", (message) => {
+      if (["error", "warning"].includes(message.type())) browserErrors.push(message.text());
+    });
+    page.on("pageerror", (error) => browserErrors.push(error.message));
+
+    await page.goto(`${origin}/modules`, { waitUntil: "networkidle" });
+    await page.getByText("Latest quiz: 8/10 · 80%", { exact: true }).waitFor();
+    assert.equal(await page.getByText("Complete", { exact: true }).count(), 2);
+    assert.equal(await page.getByRole("link", { name: "Review module", exact: true }).count(), 2);
+    assert.equal(await page.getByText(/% lesson progress$/).count(), 1);
+    assert.equal(await page.getByRole("link", { name: "Resume module", exact: true }).count(), 1);
+    assert.equal(await page.getByRole("link", { name: "Retake quiz", exact: true }).getAttribute("href"), "/modules/3/quiz");
+    assert.equal(await page.getByText(/Latest quiz: 4\/10/).count(), 0);
+    assert.equal(await page.locator("html").evaluate((element) => element.scrollWidth <= element.clientWidth), true);
+    assert.deepEqual(browserErrors, []);
+
+    await context.close();
+  } catch (error) {
+    error.message = `${error.message}\nNext.js output:\n${app.output()}`;
+    throw error;
+  } finally {
+    if (browser) await browser.close();
+    await stopNextApp(app.child);
+  }
+});
