@@ -10,12 +10,13 @@ import {
   type ProgressSyncCoordinator,
   type ProgressSyncSnapshot,
 } from "@/lib/progress-sync";
-import { setProgressOwner, subscribeProgressWrites } from "@/lib/progress-storage";
+import { resetProgress as resetLocalProgress, setProgressOwner, subscribeProgressWrites } from "@/lib/progress-storage";
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
   progressSync: ProgressSyncSnapshot;
+  resetProgress: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -115,8 +116,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.refresh();
   }
 
+  async function resetProgress() {
+    if (!user) {
+      resetLocalProgress();
+      return;
+    }
+    const coordinator = coordinatorRef.current;
+    if (!coordinator) throw new Error("Progress sync is unavailable. Please try again.");
+    await coordinator.reset();
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, progressSync, signOut }}>
+    <AuthContext.Provider value={{ user, loading, progressSync, resetProgress, signOut }}>
       {children}
     </AuthContext.Provider>
   );

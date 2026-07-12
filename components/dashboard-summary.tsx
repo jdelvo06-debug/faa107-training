@@ -1,15 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen, CircleAlert, Clock3, Cloud, Layers3, RotateCcw, Target } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { modules } from "@/lib/course-data";
 import { getFlashcardTotals, getOverallProgress, getResumeTarget, getTopicModuleHref, getWeakAreas } from "@/lib/progress-selectors";
-import { resetProgress, useProgress } from "@/lib/progress-storage";
+import { useProgress } from "@/lib/progress-storage";
 import styles from "./modern-flight-school.module.css";
 
 export function DashboardSummary() {
-  const { user, loading } = useAuth();
+  const { user, loading, resetProgress } = useAuth();
+  const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
   const progress = useProgress();
   const overall = getOverallProgress(progress);
   const target = getResumeTarget(progress);
@@ -17,6 +20,23 @@ export function DashboardSummary() {
   const flashcardTotals = getFlashcardTotals(progress);
   const completedModules = modules.filter((courseModule) => progress.modules[courseModule.id]?.completed).length;
   const latestExam = progress.examAttempts[0];
+
+  async function handleResetProgress() {
+    const confirmation = user
+      ? "Reset progress? This removes saved progress from this account across devices. This cannot be undone."
+      : "Reset progress? This removes saved progress from this browser only. This cannot be undone.";
+    if (!window.confirm(confirmation)) return;
+
+    setResetError(null);
+    setResetting(true);
+    try {
+      await resetProgress();
+    } catch {
+      setResetError("Reset failed. Your progress was not changed. Please try again.");
+    } finally {
+      setResetting(false);
+    }
+  }
 
   return (
     <div className={styles.dashboardMain}>
@@ -34,7 +54,7 @@ export function DashboardSummary() {
       {!loading && !user ? (
         <aside className={styles.dashboardSyncPrompt} aria-label="Account sync information">
           <Cloud aria-hidden="true" />
-          <p><strong>Train on more than one device?</strong> <Link href="/login">Log in to sync your progress across devices</Link> when progress sync becomes available. Your local progress works without an account.</p>
+          <p><strong>Train on more than one device?</strong> <Link href="/login">Log in to sync your progress across devices</Link>. Learning progress still works locally without an account.</p>
         </aside>
       ) : null}
 
@@ -88,7 +108,10 @@ export function DashboardSummary() {
           ) : (
             <p className={styles.emptyActivity}>Open a lesson, quiz, or flashcard deck to begin your activity trail.</p>
           )}
-          <button type="button" className={styles.resetButton} onClick={resetProgress}><RotateCcw aria-hidden="true" /> Reset progress</button>
+          <button type="button" className={styles.resetButton} onClick={handleResetProgress} disabled={resetting}>
+            <RotateCcw aria-hidden="true" /> {resetting ? "Resetting progress…" : "Reset progress"}
+          </button>
+          <p className={styles.resetStatus} role="status" aria-live="polite">{resetError}</p>
         </section>
       </div>
     </div>

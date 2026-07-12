@@ -12,10 +12,12 @@ function read(relativePath) {
 
 function deferred() {
   let resolve;
-  const promise = new Promise((resolvePromise) => {
+  let reject;
+  const promise = new Promise((resolvePromise, rejectPromise) => {
     resolve = resolvePromise;
+    reject = rejectPromise;
   });
-  return { promise, resolve };
+  return { promise, resolve, reject };
 }
 
 function flushPromises() {
@@ -43,6 +45,9 @@ function mountAuthProvider() {
   let authListener = null;
   let disposed = false;
   let unsubscribed = false;
+  let resetCalls = 0;
+  let localResetCalls = 0;
+  let renderedProvider;
 
   const coordinator = {
     authChanged(user) {
@@ -54,7 +59,10 @@ function mountAuthProvider() {
       return Promise.resolve();
     },
     localWrite() {},
-    reset() { return Promise.resolve(); },
+    reset() {
+      resetCalls += 1;
+      return Promise.resolve();
+    },
     flush() { return Promise.resolve(); },
     subscribe(listener) {
       listener({ status: "idle", userId: null, message: null });
@@ -103,7 +111,11 @@ function mountAuthProvider() {
     if (specifier === "@/lib/progress-rpc") return { createProgressRpcAdapter: () => ({}) };
     if (specifier === "@/lib/progress-sync") return { createProgressSyncCoordinator: () => coordinator };
     if (specifier === "@/lib/progress-storage") {
-      return { setProgressOwner() {}, subscribeProgressWrites: () => () => {} };
+      return {
+        resetProgress() { localResetCalls += 1; },
+        setProgressOwner() {},
+        subscribeProgressWrites: () => () => {},
+      };
     }
     throw new Error(`Unexpected provider dependency: ${specifier}`);
   };
@@ -131,8 +143,12 @@ function mountAuthProvider() {
 
   const module = { exports: {} };
   Function("require", "module", "exports", compiled)(mockRequire, module, module.exports);
-  hookIndex = 0;
-  module.exports.AuthProvider({ children: "content" });
+  function render() {
+    hookIndex = 0;
+    renderedProvider = module.exports.AuthProvider({ children: "content" });
+    return renderedProvider;
+  }
+  render();
   assert.equal(effects.length, 1);
   const cleanupEffect = effects[0]();
 
@@ -151,8 +167,12 @@ function mountAuthProvider() {
     },
     get user() { return stateSlots[1]; },
     get loading() { return stateSlots[2]; },
+    get context() { return renderedProvider.props.value; },
     get disposed() { return disposed; },
+    get localResetCalls() { return localResetCalls; },
+    get resetCalls() { return resetCalls; },
     get unsubscribed() { return unsubscribed; },
+    render,
     unmount() {
       cleanupEffect();
       restoreGlobal("window", originalWindow);
@@ -307,7 +327,7 @@ test("missing codes and failed exchanges use the same-origin auth error route", 
   assert.equal(failedExchange.location, "https://faa107-training.vercel.app/auth/auth-code-error");
 });
 
-test("auth provider exposes user state and sign out to the application shell", () => {
+test("auth provider exposes user state, progress sync, reset, and sign out to the application shell", () => {
   const provider = read("components/auth-provider.tsx");
   const layout = read("app/layout.tsx");
   const shell = read("components/modern-flight-school-shell.tsx");
@@ -321,7 +341,7 @@ test("auth provider exposes user state and sign out to the application shell", (
   assert.match(provider, /online/);
   assert.match(provider, /focus/);
   assert.match(provider, /progressSync/);
-  assert.doesNotMatch(provider, /resetProgress/);
+  assert.match(provider, /resetProgress/);
   assert.match(provider, /signOut/);
   assert.match(provider, /\.catch\(\(\) => \{[\s\S]*setLoading\(false\)/);
   assert.match(layout, /<AuthProvider>/);
@@ -331,6 +351,56 @@ test("auth provider exposes user state and sign out to the application shell", (
   assert.match(shell, /Sign out/);
   assert.match(shell, /authControlsDesktop/);
   assert.match(shell, /authControlsMobile/);
+});
+
+test("auth context reset uses the coordinator for a signed-in learner and stays local for an anonymous learner", async () => {
+  const signedIn = mountAuthProvider();
+  const user = { id: "11111111-1111-4111-8111-111111111111" };
+  signedIn.lookup.resolve({ data: { user } });
+  await flushPromises();
+  signedIn.render();
+
+  assert.equal(signedIn.context.progressSync.status, "idle");
+  await signedIn.context.resetProgress();
+  assert.equal(signedIn.resetCalls, 1);
+  assert.equal(signedIn.localResetCalls, 0);
+  signedIn.unmount();
+
+  const anonymous = mountAuthProvider();
+  anonymous.lookup.resolve({ data: { user: null } });
+  await flushPromises();
+  anonymous.render();
+  await anonymous.context.resetProgress();
+  assert.equal(anonymous.resetCalls, 0);
+  assert.equal(anonymous.localResetCalls, 1);
+  anonymous.unmount();
+});
+
+test("authenticated progress sync status is compact, polite, and uses exact truthful copy", () => {
+  const shell = read("components/modern-flight-school-shell.tsx");
+
+  for (const copy of [
+    "Saving progress…",
+    "Progress synced",
+    "Saved locally — sync pending",
+    "Update required to sync progress",
+  ]) {
+    assert.match(shell, new RegExp(copy));
+  }
+  assert.match(shell, /user \? \([\s\S]*?role="status"[\s\S]*?aria-live="polite"/);
+  assert.doesNotMatch(shell, /toast|dialog|modal/i);
+});
+
+test("dashboard reset distinguishes account-wide RPC reset from browser-only anonymous reset", () => {
+  const dashboard = read("components/dashboard-summary.tsx");
+
+  assert.match(dashboard, /Reset progress\? This removes saved progress from this account across devices\. This cannot be undone\./);
+  assert.match(dashboard, /Reset progress\? This removes saved progress from this browser only\. This cannot be undone\./);
+  assert.match(dashboard, /await resetProgress\(\)/);
+  assert.match(dashboard, /disabled=\{resetting\}/);
+  assert.match(dashboard, /Resetting progress…/);
+  assert.match(dashboard, /Reset failed\. Your progress was not changed\. Please try again\./);
+  assert.match(dashboard, /aria-live="polite"/);
 });
 
 test("a newer auth event prevents a deferred initial user from reactivating the old owner", async () => {
@@ -409,6 +479,8 @@ test("logged-out dashboard sync prompt is non-blocking and leaves progress stora
 
   assert.match(dashboard, /useAuth\(\)/);
   assert.match(dashboard, /sync your progress across devices/i);
+  assert.match(dashboard, /Learning progress still works locally without an account\./);
+  assert.doesNotMatch(dashboard, /when progress sync becomes available/i);
   assert.match(dashboard, /href="\/login"/);
   assert.match(dashboard, /useProgress\(\)/);
   assert.match(progressStorage, /localStorage/);

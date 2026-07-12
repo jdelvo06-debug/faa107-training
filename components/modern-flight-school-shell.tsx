@@ -19,11 +19,19 @@ const links = [
   { href: "/about", label: "About" },
 ];
 
+const progressSyncCopy = {
+  saving: "Saving progress…",
+  synced: "Progress synced",
+  "local-only": "Saved locally — sync pending",
+  "update-required": "Update required to sync progress",
+} as const;
+
 export function ModernFlightSchoolShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, progressSync, signOut } = useAuth();
+  const syncStatus = progressSync.status === "idle" ? null : progressSyncCopy[progressSync.status];
 
   function handleSignOut() {
     setAuthError(null);
@@ -90,6 +98,11 @@ export function ModernFlightSchoolShell({ children }: { children: React.ReactNod
             <Link href="/modules/1" className={styles.headerCta}>Start learning</Link>
           </div>
         </div>
+        {user ? (
+          <p className={styles.progressSyncStatus} role="status" aria-live="polite" aria-atomic="true">
+            {syncStatus}
+          </p>
+        ) : null}
         <p className={styles.navAuthStatus} aria-live="polite">{authError}</p>
       </header>
       <main className={pathname === "/" ? undefined : styles.flightContent}>{children}</main>

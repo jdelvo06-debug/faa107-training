@@ -92,6 +92,7 @@
 .authUserEmail { max-width: 150px; overflow: hidden; display: inline-flex; align-items: center; gap: 7px; color: var(--flight-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .authUserEmail svg { width: 16px; height: 16px; flex: 0 0 auto; }
 .authLoading { color: var(--flight-muted); font-size: 12px; }
+.progressSyncStatus { width: fit-content; margin: -8px 32px 8px auto; color: var(--flight-muted); font-size: 11px; line-height: 1.3; }
 .navAuthStatus { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .eyebrow { margin: 0 0 12px; color: var(--flight-coral-dark); font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
 
@@ -165,6 +166,8 @@
 .activityList a { grid-template-columns: 1fr 24px; font-size: 14px; }
 .resetButton { margin-top: 26px; min-height: 44px; padding: 0 16px; display: inline-flex; align-items: center; gap: 9px; border: 1px solid var(--flight-line); border-radius: 9px; background: transparent; color: var(--flight-muted); cursor: pointer; }
 .resetButton svg { width: 17px; height: 17px; }
+.resetButton:disabled { cursor: wait; opacity: 0.65; }
+.resetStatus { min-height: 20px; margin: 8px 0 0; color: var(--flight-coral-dark); font-size: 13px; line-height: 1.45; }
 
 .authPage { min-height: calc(100vh - 76px); padding: 64px 24px 90px; display: grid; place-items: start center; background: linear-gradient(145deg, var(--flight-cream) 0 58%, var(--flight-sky) 58% 100%); }
 .authCard { width: min(100%, 560px); padding: 42px; border: 1px solid var(--flight-line); border-radius: 22px; background: rgba(255, 253, 248, 0.98); box-shadow: 0 24px 80px rgba(21, 69, 62, 0.11); }
@@ -292,6 +295,7 @@
   .authControlsMobile a, .authControlsMobile button { min-height: 46px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--flight-line); border-radius: 9px; background: var(--flight-paper); color: var(--flight-teal); font-weight: 750; cursor: pointer; }
   .authControlsMobile a:last-child { border-color: var(--flight-coral); background: var(--flight-coral); color: #fff; }
   .authControlsMobile .authUserEmail { max-width: none; justify-content: flex-start; border: 0; grid-column: 1 / -1; }
+  .progressSyncStatus { margin-right: 24px; }
 }
 
 @media (max-width: 1040px) {
@@ -305,6 +309,7 @@
   .flightHeaderInner { padding-inline: 16px; }
   .flightBrand { font-size: 17px; }
   .flightBrand svg { width: 28px; height: 28px; }
+  .progressSyncStatus { margin-right: 16px; }
   .coursePage { width: min(calc(100% - 32px), 1240px); padding-block: 42px 80px; }
   .moduleCompletion { padding: 24px 20px; grid-template-columns: 1fr; }
   .moduleCompletionActions { align-items: stretch; flex-direction: column; }
