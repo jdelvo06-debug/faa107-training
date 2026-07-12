@@ -1,12 +1,120 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const { spawn } = require("node:child_process");
+const { once } = require("node:events");
 const fs = require("node:fs");
+const net = require("node:net");
+const os = require("node:os");
 const path = require("node:path");
+const { chromium } = require("@playwright/test");
 const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
 const ts = require("typescript");
 
 const root = path.resolve(__dirname, "..");
+
+function delay(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function getAvailablePort() {
+  const server = net.createServer();
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  const address = server.address();
+  assert.ok(address && typeof address === "object");
+  await new Promise((resolve, reject) => {
+    server.close((error) => error ? reject(error) : resolve());
+  });
+  return address.port;
+}
+
+function startNextApp(port) {
+  const output = [];
+  const child = spawn(
+    process.execPath,
+    [path.join(root, "node_modules/next/dist/bin/next"), "dev", "--hostname", "127.0.0.1", "--port", String(port)],
+    {
+      cwd: root,
+      env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" },
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+  const capture = (chunk) => {
+    output.push(chunk.toString());
+    if (output.length > 80) output.shift();
+  };
+  child.stdout.on("data", capture);
+  child.stderr.on("data", capture);
+  return { child, output: () => output.join("") };
+}
+
+async function waitForNextApp(url, child, output) {
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    if (child.exitCode !== null) {
+      throw new Error(`Next.js exited before becoming ready.\n${output()}`);
+    }
+    try {
+      const response = await fetch(url);
+      if (response.ok) return;
+    } catch {
+      // The development server is still starting.
+    }
+    await delay(100);
+  }
+  throw new Error(`Timed out waiting for Next.js.\n${output()}`);
+}
+
+async function stopNextApp(child) {
+  if (child.exitCode !== null) return;
+  child.kill("SIGTERM");
+  await Promise.race([once(child, "exit"), delay(5_000)]);
+  if (child.exitCode === null) child.kill("SIGKILL");
+}
+
+function findCachedChromiumExecutable() {
+  const cacheRoots = [
+    process.env.PLAYWRIGHT_BROWSERS_PATH,
+    path.join(os.homedir(), "Library/Caches/ms-playwright"),
+    path.join(os.homedir(), ".cache/ms-playwright"),
+  ].filter(Boolean);
+  const executableSuffixes = process.platform === "darwin"
+    ? [
+        "chrome-headless-shell-mac-arm64/chrome-headless-shell",
+        "chrome-headless-shell-mac-x64/chrome-headless-shell",
+      ]
+    : [
+        "chrome-headless-shell-linux64/chrome-headless-shell",
+        "chrome-headless-shell-linux/chrome-headless-shell",
+      ];
+
+  for (const cacheRoot of cacheRoots) {
+    if (!fs.existsSync(cacheRoot)) continue;
+    const browserDirectories = fs.readdirSync(cacheRoot)
+      .filter((name) => name.startsWith("chromium_headless_shell-"))
+      .sort()
+      .reverse();
+    for (const browserDirectory of browserDirectories) {
+      for (const suffix of executableSuffixes) {
+        const executable = path.join(cacheRoot, browserDirectory, suffix);
+        if (fs.existsSync(executable)) return executable;
+      }
+    }
+  }
+  return null;
+}
+
+async function launchTestBrowser() {
+  const expectedExecutable = chromium.executablePath();
+  if (fs.existsSync(expectedExecutable)) return chromium.launch({ headless: true });
+
+  const cachedExecutable = findCachedChromiumExecutable();
+  assert.ok(cachedExecutable, `Playwright Chromium is not installed at ${expectedExecutable}`);
+  return chromium.launch({ headless: true, executablePath: cachedExecutable });
+}
 
 function compileModule(relativePath, localRequire, jsx = ts.JsxEmit.None) {
   const absolutePath = path.join(root, relativePath);
@@ -215,5 +323,84 @@ test("visiting every slide still records local module completion", () => {
     });
   } finally {
     global.window = originalWindow;
+  }
+});
+
+test("interactive final-slide recovery persists completion before exposing completion exits", { timeout: 120_000 }, async () => {
+  const port = await getAvailablePort();
+  const origin = `http://127.0.0.1:${port}`;
+  const app = startNextApp(port);
+  let browser;
+
+  try {
+    await waitForNextApp(`${origin}/modules/1`, app.child, app.output);
+    browser = await launchTestBrowser();
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const browserErrors = [];
+    page.on("console", (message) => {
+      if (["error", "warning"].includes(message.type())) browserErrors.push(message.text());
+    });
+    page.on("pageerror", (error) => browserErrors.push(error.message));
+
+    await page.goto(`${origin}/modules/1`, { waitUntil: "domcontentloaded" });
+    await page.getByText("Slide 1 of 8", { exact: true }).waitFor();
+    await page.waitForFunction(() => {
+      const raw = window.localStorage.getItem("faa107-progress-v1");
+      const moduleProgress = raw ? JSON.parse(raw).modules?.["1"] : null;
+      return moduleProgress?.completed === false && moduleProgress.visitedSlideIds.length === 1;
+    });
+
+    await page.getByRole("button", { name: "Go to slide 8", exact: true }).click();
+    const pendingHeading = page.getByRole("heading", { name: "Complete the remaining slides", exact: true });
+    try {
+      await pendingHeading.waitFor({ timeout: 10_000 });
+    } catch (error) {
+      const renderedState = await page.locator("main").innerText();
+      const storedProgress = await page.evaluate(() => window.localStorage.getItem("faa107-progress-v1"));
+      error.message = `${error.message}\nRendered main:\n${renderedState}\nStored progress:\n${storedProgress}`;
+      throw error;
+    }
+    assert.equal(await page.getByRole("heading", { name: "Module Complete", exact: true }).count(), 0);
+    assert.equal(await page.getByRole("link", { name: "Return to Dashboard", exact: true }).count(), 0);
+    await page.waitForFunction(() => {
+      const raw = window.localStorage.getItem("faa107-progress-v1");
+      const moduleProgress = raw ? JSON.parse(raw).modules?.["1"] : null;
+      return moduleProgress?.completed === false && moduleProgress.visitedSlideIds.length === 2;
+    });
+
+    await page.getByRole("button", { name: "Review Remaining Slides", exact: true }).click();
+    await page.getByText("Slide 2 of 8", { exact: true }).waitFor();
+    await page.waitForFunction(() => {
+      const raw = window.localStorage.getItem("faa107-progress-v1");
+      const moduleProgress = raw ? JSON.parse(raw).modules?.["1"] : null;
+      return moduleProgress?.completed === false && moduleProgress.visitedSlideIds.length === 3;
+    });
+
+    for (let slideNumber = 3; slideNumber <= 7; slideNumber += 1) {
+      await page.getByRole("button", { name: "Next", exact: true }).click();
+      await page.getByText(`Slide ${slideNumber} of 8`, { exact: true }).waitFor();
+    }
+    await page.waitForFunction(() => {
+      const raw = window.localStorage.getItem("faa107-progress-v1");
+      const moduleProgress = raw ? JSON.parse(raw).modules?.["1"] : null;
+      return moduleProgress?.completed === true && moduleProgress.visitedSlideIds.length === 8;
+    });
+    assert.equal(await page.getByRole("heading", { name: "Module Complete", exact: true }).count(), 0);
+
+    await page.getByRole("button", { name: "Next", exact: true }).click();
+    await page.getByRole("heading", { name: "Module Complete", exact: true }).waitFor();
+    assert.equal(await page.getByText("Module completion recorded on this device.", { exact: true }).count(), 1);
+    assert.equal(await page.getByRole("link", { name: "Return to Dashboard", exact: true }).count(), 1);
+    assert.equal(await page.getByRole("button", { name: "Review Remaining Slides", exact: true }).count(), 0);
+    assert.deepEqual(browserErrors, []);
+
+    await context.close();
+  } catch (error) {
+    error.message = `${error.message}\nNext.js output:\n${app.output()}`;
+    throw error;
+  } finally {
+    if (browser) await browser.close();
+    await stopNextApp(app.child);
   }
 });
