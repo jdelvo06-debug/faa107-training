@@ -39,14 +39,15 @@ interface AuthenticatedProgressCacheEnvelope {
   envelopeVersion: 1;
   progress: ProgressState;
   resetGeneration: string | null;
+  resetEpoch: string | null;
   revision: string | null;
   baseProgress: ProgressState | null;
 }
 ```
 
-`resetGeneration` is the UUID from the last canonical row observed by this browser. `revision` is the corresponding non-negative bigint encoded as a decimal string so JavaScript cannot lose precision. `baseProgress` is that revision's normalized canonical progress and is the durable base used to derive an offline delta after restart. `progress` is the latest normalized local rendering state; it may include unsynced changes. A clean cache has `progress` equal to `baseProgress`. A never-synced cache uses null generation, revision, and base until a canonical row is observed.
+`resetGeneration` is the UUID from the last canonical row observed by this browser. `resetEpoch` is the corresponding non-negative reset-history counter, encoded as a decimal string. `revision` is also a non-negative bigint encoded as a decimal string so JavaScript cannot lose precision. `baseProgress` is that revision's normalized canonical progress and is the durable base used to derive an offline delta after restart. `progress` is the latest normalized local rendering state; it may include unsynced changes. A clean cache has `progress` equal to `baseProgress`. A never-synced cache uses null generation, reset epoch, revision, and base until a canonical row is observed.
 
-Local authenticated writes replace only `progress`; they retain the envelope's generation, revision, and base metadata until an RPC response advances the canonical base. An untagged or malformed authenticated cache is unverified legacy data: it may be retained byte-for-byte while remote state is unavailable, but it is never merged or uploaded. Once canonical remote state is available, the coordinator replaces it with a valid envelope rather than guessing a generation.
+Local authenticated writes replace only `progress`; they retain the envelope's generation, reset epoch, revision, and base metadata until an RPC response advances the canonical base. An untagged or malformed authenticated cache is unverified legacy data: it may be retained byte-for-byte while remote state is unavailable, but it is never merged or uploaded. Once canonical remote state is available, the coordinator replaces it with a valid envelope rather than guessing a generation or reset history.
 
 `lib/progress-storage.ts` remains the only immediate write funnel. Existing write functions synchronously update the active owner context's local cache and dispatch the existing browser progress event, so rendering never waits for Supabase. The storage module also publishes write notifications to the sync coordinator. With no authenticated coordinator, writes stop at the anonymous key exactly as they do today.
 
@@ -92,15 +93,15 @@ Authenticated startup runs in this order:
 
 1. Capture and validate `{ activeUserId, sessionEpoch }`.
 2. Read only that user's scoped cache envelope and unsynced marker. Validate the envelope without changing its generation metadata.
-3. Fetch that user's canonical remote row, including `revision` and `reset_generation`.
-4. If the remote fetch is unavailable, render valid tagged `progress` from the local envelope and retain its `resetGeneration`, `revision`, `baseProgress`, and unsynced marker unchanged. Do not assign a new generation, merge it into any assumed remote state, or upload it until a canonical remote comparison succeeds.
-5. If the envelope's non-null `resetGeneration` differs from the canonical remote generation, discard the envelope's `progress` and `baseProgress` completely, clear any marker tied to the stale generation, and replace the envelope with the normalized remote progress, generation, and revision. Do not merge or upload any stale bytes, regardless of whether the old cache was clean or dirty.
-6. If the envelope has no verified generation while a remote row exists, treat it as unverified rather than as current-generation data: do not merge or upload it, and replace it with the canonical remote envelope. If the fetch proves no row exists, combine only a valid never-synced envelope and any durable claimed anonymous snapshot into a first-commit candidate with null expected revision/generation and canonical empty `baseProgress`; the locked first-row path below assigns the initial generation.
-7. If envelope and remote generations match, normalize and merge local `progress` with canonical remote progress. Use the envelope's `baseProgress` and revision for any pending delta, then persist the resulting same-generation envelope without recursively scheduling a write.
+3. Fetch that user's canonical remote row, including `revision`, `reset_generation`, and `reset_epoch`.
+4. If the remote fetch is unavailable, render valid tagged `progress` from the local envelope and retain its `resetGeneration`, `resetEpoch`, `revision`, `baseProgress`, and unsynced marker unchanged. Do not assign a new generation, reset epoch, or revision; do not merge it into any assumed remote state or upload it until a canonical remote comparison succeeds.
+5. If the envelope's non-null `resetGeneration` differs from the canonical remote generation, or its non-null `resetEpoch` differs from the canonical remote reset epoch, discard the envelope's `progress` and `baseProgress` completely, clear any marker tied to the stale generation, and replace the envelope with the normalized remote progress, generation, reset epoch, and revision. Do not merge or upload any stale bytes, regardless of whether the old cache was clean or dirty.
+6. If the envelope has no verified generation or reset epoch while a remote row exists, treat it as unverified rather than as current-generation data: do not merge or upload it, and replace it with the canonical remote envelope. If the fetch proves no row exists, combine only a valid never-synced envelope and any durable claimed anonymous snapshot into a first-commit candidate with null expected revision/generation and canonical empty `baseProgress`; the locked first-row path below assigns the initial generation and epoch 0.
+7. If envelope and remote generations and reset epochs match, normalize and merge local `progress` with canonical remote progress. Use the envelope's `baseProgress` and revision for any pending delta, then persist the resulting same-generation, same-epoch envelope without recursively scheduling a write.
 8. If eligible, execute the one-time anonymous import inside this same queued startup job using its durable claimed snapshot.
-9. If same-generation merged progress differs from remote state or an unsynced marker exists for that generation, commit through the atomic RPC.
+9. If same-generation, same-epoch merged progress differs from remote state or an unsynced marker exists for that generation, commit through the atomic RPC.
 
-A normal local write updates the UI and the envelope's `progress` immediately, preserves the envelope's generation/revision/base fields, sets the user-scoped unsynced marker before scheduling network work, and enqueues one debounced flush. A flush submits the envelope's last observed remote revision and reset generation, `baseProgress`, and latest normalized `progress`. It never performs a client-side read-then-upsert sequence.
+A normal local write updates the UI and the envelope's `progress` immediately, preserves the envelope's generation/reset-epoch/revision/base fields, sets the user-scoped unsynced marker before scheduling network work, and enqueues one debounced flush. A flush submits the envelope's last observed remote revision and reset generation, `baseProgress`, and latest normalized `progress`. It never performs a client-side read-then-upsert sequence.
 
 ### Atomic concurrency RPC
 
@@ -116,16 +117,17 @@ commit_faa107_progress(
 )
 ```
 
-`expected_revision` and `expected_generation` are both nullable only for a first commit after the client observed no row; they must otherwise both be present. The function derives `user_id` from `(select auth.uid())`, validates and normalizes the payload, and first acquires a per-user PostgreSQL advisory transaction lock with `pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended((select auth.uid())::text, 0))`. A hash collision may serialize unrelated users but cannot weaken correctness. Holding this lock through commit serializes the absent-row check and first-row creation, which `SELECT ... FOR UPDATE` alone cannot do. After acquiring it, the function selects that user's row with `FOR UPDATE`. A private operation-receipt table keyed by `(user_id, operation_id)` makes network retries idempotent even if another device commits between the original response and retry. The response always includes `status`, `progress`, `revision`, and `reset_generation` for the latest canonical row visible within the transaction.
+`expected_revision` and `expected_generation` are both nullable only for a first commit after the client observed no row; they must otherwise both be present. The function derives `user_id` from `(select auth.uid())`, validates and normalizes the payload, and first acquires a per-user PostgreSQL advisory transaction lock with `pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended((select auth.uid())::text, 0))`. A hash collision may serialize unrelated users but cannot weaken correctness. Holding this lock through commit serializes the absent-row check and first-row creation, which `SELECT ... FOR UPDATE` alone cannot do. After acquiring it, the function selects that user's row with `FOR UPDATE`. A private operation-receipt table keyed by `(user_id, operation_id)` makes network retries idempotent even if another device commits between the original response and retry. The response always includes `status`, `progress`, `revision`, `reset_generation`, and `reset_epoch` for the latest canonical row visible within the transaction.
 
 Within one transaction:
 
-1. If no row exists after the advisory lock is held, the RPC accepts only null expected revision/generation plus canonical empty `base_progress`, initializes one row with revision 0 and a new reset generation, treats those initialized values as the submitted write's expectations, and applies the first canonical commit before ending the same transaction. No absent row is ever assumed safe merely because a locking SELECT returned no rows.
-2. If a racing or delayed first-observation request supplied null expected revision/generation but finds that a preceding lock holder already created the row, the RPC does not merge the null-generation proposal and does not insert an operation receipt. It returns `status = 'first_row_race'` and the current canonical row unchanged. The client keeps its per-user unsynced marker, re-merges its local candidate with that returned canonical row, and retries with a new operation ID using the returned non-null revision and generation. This prevents a delayed null-generation request from bypassing a reset while still preserving a simultaneous contender's progress through the required retry.
-3. For every request with a non-null `expected_generation`, if it differs from the locked row's `reset_generation`, the RPC rejects the write with `status = 'generation_mismatch'`. It does not merge or retain the stale proposed payload and returns the current empty-or-newer canonical row.
-4. If generation and revision both match, the RPC returns `status = 'current'` without incrementing revision when normalized `proposed_progress` already equals the canonical row; otherwise it stores the proposed progress, increments `revision`, records `operation_id`, and returns `status = 'committed'`.
-5. If generation matches but revision differs, the optimistic compare-and-swap is considered conflicted. In the same locked transaction, the RPC derives the submitted delta from `base_progress` to `proposed_progress`, deterministically merges that delta into the current canonical row, applies canonical retention, increments `revision`, records `operation_id`, and returns `status = 'revision_conflict'` plus the newly merged canonical row.
-6. A repeated `operation_id` returns `status = 'duplicate'` and the current canonical row without applying the delta or incrementing the revision again. The receipt is inserted in the same transaction as the progress mutation. Receipts are retained for at least 30 days and pruned in bounded batches after that retry window; clients never retry an operation ID after the window expires.
+1. If no row exists after the advisory lock is held, the RPC accepts only null expected revision/generation plus canonical empty `base_progress`, initializes one row with revision 0, `reset_epoch = 0`, and a new reset generation, treats those initialized values as the submitted write's expectations, and applies the first canonical commit before ending the same transaction. No absent row is ever assumed safe merely because a locking SELECT returned no rows.
+2. If a null-generation request finds an existing row with `reset_epoch = 0`, the RPC does not merge the proposal and does not insert an operation receipt. It returns `status = 'first_row_race'` and the current canonical row unchanged. The client keeps its per-user unsynced marker, re-merges its local candidate with that returned canonical row, and retries with a new operation ID using the returned non-null revision and generation. Epoch 0 proves that no reset has occurred since ordinary initial creation.
+3. If a null-generation request finds an existing row with `reset_epoch > 0`, the RPC does not merge the proposal and does not insert an operation receipt. It returns terminal `status = 'pre_generation_rejected'` and the current canonical reset row. The client discards the null-generation candidate and its unsynced marker, replaces its scoped envelope with the returned progress, reset generation, reset epoch, revision, and base, and must not merge or retry the discarded candidate.
+4. For every request with a non-null `expected_generation`, if it differs from the locked row's `reset_generation`, the RPC rejects the write with `status = 'generation_mismatch'`. It does not merge or retain the stale proposed payload and returns the current empty-or-newer canonical row. The existing stale-payload discard behavior remains unchanged.
+5. If generation and revision both match, the RPC returns `status = 'current'` without incrementing revision when normalized `proposed_progress` already equals the canonical row; otherwise it stores the proposed progress, increments `revision`, records `operation_id`, and returns `status = 'committed'`.
+6. If generation matches but revision differs, the optimistic compare-and-swap is considered conflicted. In the same locked transaction, the RPC derives the submitted delta from `base_progress` to `proposed_progress`, deterministically merges that delta into the current canonical row, applies canonical retention, increments `revision`, records `operation_id`, and returns `status = 'revision_conflict'` plus the newly merged canonical row.
+7. A repeated `operation_id` returns `status = 'duplicate'` and the current canonical row without applying the delta or incrementing the revision again. The receipt is inserted in the same transaction as the progress mutation. Receipts are retained for at least 30 days and pruned in bounded batches after that retry window; clients never retry an operation ID after the window expires.
 
 The conflict branch is deliberately server-assisted: merely rejecting stale revision N and asking the losing browser to retry would still lose its update if that browser closed. Because the RPC incorporates the losing write's delta before returning the revision-conflict result, two devices that start at revision N and add disjoint progress converge to a canonical row containing both updates in either commit order, even if the second device closes as soon as it receives its first conflict response.
 
@@ -205,6 +207,7 @@ create table public.faa107_user_progress (
   progress jsonb not null,
   revision bigint not null default 0 check (revision >= 0),
   reset_generation uuid not null,
+  reset_epoch bigint not null default 0 check (reset_epoch >= 0),
   updated_at timestamptz not null default now()
 );
 
@@ -222,6 +225,7 @@ The migration will:
 - Grant authenticated users only the owner-scoped SELECT needed for startup and Realtime, plus EXECUTE on the two public RPCs.
 - Enable RLS and create an authenticated SELECT policy using `(select auth.uid()) = user_id`.
 - Define `commit_faa107_progress` and `reset_faa107_progress` as narrowly granted security-definer functions that derive ownership only from `auth.uid()`, reject a missing user, accept no target-user parameter, use a fixed empty `search_path`, and schema-qualify every referenced object.
+- Permit only the reset RPC to increment `reset_epoch`; normal commits and conflict merges preserve it exactly.
 - Keep the operation receipts and merge/validation helpers in a private schema and revoke all browser-role access. Only the two audited public RPC entry points may reach them.
 - Add `faa107_user_progress` to the authenticated Realtime publication for reset propagation; owner-only SELECT RLS remains authoritative for change delivery.
 - Set `updated_at` inside the locked RPC transaction. There is no client-controlled timestamp trigger and no DELETE policy because reset never deletes progress.
@@ -232,14 +236,18 @@ No policy or function grants cross-user access. No browser code receives elevate
 
 Reset is a distinct queued operation, not a normal progress write. The confirmation copy for a signed-in learner must say: **“Reset progress? This removes saved progress from this account across devices. This cannot be undone.”** Anonymous reset copy may state that it removes progress from this browser.
 
-`reset_faa107_progress(operation_id uuid)` derives the user from `auth.uid()`, acquires the same per-user advisory transaction lock before inspecting the row, and then locks the row. If no row exists, it creates the empty row inside that transaction before applying reset. It writes canonical empty version-1 progress, assigns a new random `reset_generation`, increments `revision`, records the operation ID, and returns the canonical row. It never deletes the row and is idempotent for a repeated operation ID.
+`reset_epoch` is durable evidence that at least one reset has occurred. Normal first-row creation initializes it to 0, normal commits never change it, and every successful reset increments it exactly once in the same locked transaction as the canonical empty write. The counter never decreases or returns to 0.
 
-The coordinator keeps the reset UI pending until the RPC succeeds. Once it succeeds, it writes an envelope whose `progress` and `baseProgress` are the returned empty canonical progress and whose generation and revision are the returned new values, clears that user's unsynced marker and queued candidate, and publishes the synced state. If the reset request fails, the coordinator retains the pre-reset scoped envelope and reports the failure; it must not present a local reset that could later be silently reversed.
+`reset_faa107_progress(operation_id uuid)` derives the user from `auth.uid()`, acquires the same per-user advisory transaction lock before inspecting the row, and then locks the row. If no row exists, it creates an empty row with `reset_epoch = 0` inside that transaction and then applies reset, producing `reset_epoch = 1`; reset-before-first-commit is therefore distinguishable from ordinary first-row creation. It writes canonical empty version-1 progress, assigns a new random `reset_generation`, increments `reset_epoch` and `revision`, records the operation ID, and returns the canonical row. It never deletes the row and is idempotent for a repeated operation ID, so an operation retry cannot increment the epoch twice.
+
+The coordinator keeps the reset UI pending until the RPC succeeds. Once it succeeds, it writes an envelope whose `progress` and `baseProgress` are the returned empty canonical progress and whose generation, reset epoch, and revision are the returned new values, clears that user's unsynced marker and queued candidate, and publishes the synced state. If the reset request fails, the coordinator retains the pre-reset scoped envelope and reports the failure; it must not present a local reset that could later be silently reversed.
+
+`pre_generation_rejected` is terminal stale-data handling, not a conflict retry. The coordinator applies the returned canonical reset row as a clean scoped envelope, clears the null-generation candidate and marker, and schedules no retry containing that candidate. Later learner actions begin from the adopted reset envelope as new current-generation writes.
 
 Every normal commit carries the generation captured from its base row. A commit from before reset therefore receives `generation_mismatch`, even if its expected revision would otherwise match. On generation mismatch, the client must:
 
 1. Discard the submitted candidate and all queued data tagged with the old generation.
-2. Replace only that user's scoped envelope with the returned canonical progress, generation, revision, and base.
+2. Replace only that user's scoped envelope with the returned canonical progress, generation, reset epoch, revision, and base.
 3. Clear that user's old-generation unsynced marker.
 4. Re-render the reset state without retrying the stale payload.
 
@@ -276,7 +284,7 @@ All later behavioral implementation will follow red-green-refactor cycles. Close
 
 ### Atomic and concurrent writes
 
-- RPC tests cover row creation, `first_row_race`, matching revision/generation commit, idempotent operation IDs, revision conflict, generation mismatch, invalid payload, oversized payload, and unauthenticated invocation.
+- RPC tests cover row creation, `first_row_race`, `pre_generation_rejected`, matching revision/generation commit, idempotent operation IDs, revision conflict, generation mismatch, invalid payload, oversized payload, and unauthenticated invocation.
 - Two new devices with no existing row race their first disjoint commits simultaneously. The advisory transaction lock serializes creation; the contender receives `first_row_race`, re-merges, and retries with the returned revision/generation. The final single canonical row contains both changes without a uniqueness error, generation bypass, or data loss.
 - Two devices start from revision N and the same generation, Device A adds a module completion, and Device B adds a quiz attempt. Committing A then B and B then A both produce one canonical row containing both changes.
 - In that test, the device receiving `revision_conflict` closes immediately without a client retry; the returned and persisted canonical server row still contains both disjoint changes.
@@ -286,7 +294,9 @@ All later behavioral implementation will follow red-green-refactor cycles. Close
 ### Reset safety
 
 - Reset racing an in-flight old-generation write leaves the row empty in the new generation; the old write is rejected and cannot recreate progress.
-- A delayed null-generation first-observation request that arrives after a row exists, including after reset, receives `first_row_race` and the canonical row unchanged; it cannot merge until the client adopts the returned generation and retries.
+- If the first normal commit wins the advisory lock, then reset commits, then a delayed null-generation contender arrives, the row has `reset_epoch > 0`; the contender receives terminal `pre_generation_rejected`, discards its candidate and marker, adopts the reset envelope, and cannot recreate pre-reset progress.
+- If reset wins the advisory lock before any normal first commit, it creates the row and advances `reset_epoch` from 0 to 1 in that transaction. Any delayed null-generation first commit receives terminal `pre_generation_rejected` and cannot merge or retry its candidate.
+- If two normal first commits race and no reset occurs, the created row remains at `reset_epoch = 0`; the contender receives `first_row_race`, re-merges, retries with the returned revision/generation, and both disjoint changes converge.
 - A stale second device writing after reset receives `generation_mismatch`, discards its queued old-generation payload, and adopts empty canonical progress.
 - Device A and Device B first hold clean, previously synced generation G1 envelopes. Device A resets to G2 while Device B is offline with no pending write. When Device B restarts, reconnects, and fetches G2, it discards its entire G1 envelope before merging, renders the G2 empty state, and performs no upload that can recreate G1 progress.
 - Reload after reset restores empty progress from the same persistent row and generation; no deleted-row recreation path exists.
@@ -306,7 +316,7 @@ All later behavioral implementation will follow red-green-refactor cycles. Close
 
 ### Security and browser proof
 
-- Migration tests inspect the table, foreign key, revision, reset generation, owner SELECT policy, revoked direct writes, RPC grants, fixed search paths, private helpers, per-user advisory transaction lock before absent-row inspection, and absence of DELETE access.
+- Migration tests inspect the table, foreign key, revision, reset generation, non-negative `reset_epoch` default/check, owner SELECT policy, revoked direct writes, RPC grants, fixed search paths, private helpers, per-user advisory transaction lock before absent-row inspection, reset-only epoch increments including reset on an absent row, and absence of DELETE access.
 - Live verification in a later implementation phase proves anonymous access is denied and two authenticated users cannot read or change each other's rows or invoke an RPC against another user ID.
 - Same-user clean-context browser proof restores module and quiz progress from the remote row.
 - Same-browser A-to-B-to-A proof demonstrates zero cross-account contamination and correct A restoration.
@@ -330,8 +340,8 @@ git diff --check
 Implementation closeout must report:
 
 - Migration and RPC names, changed files, exact grants/RLS behavior, and confirmation that no service-role key exists in client or server code.
-- The client/server canonical merge fixture results, simultaneous first-row creation proof, and explicit two-device revision-conflict proof.
-- Durable anonymous-snapshot retry, A-to-B-to-A isolation, old-request account-switch, offline clean-cache generation mismatch, reset race, stale-device, reload, and open-device propagation results.
+- The client/server canonical merge fixture results, epoch-0 simultaneous first-row creation proof, `first_row_race` behavior, `pre_generation_rejected` behavior, and explicit two-device revision-conflict proof.
+- Durable anonymous-snapshot retry, A-to-B-to-A isolation, old-request account-switch, offline clean-cache generation mismatch, both reset/null-generation lock orderings, reset-before-first-commit epoch initialization, reset race, stale-device, reload, and open-device propagation results.
 - Retry/backoff, persisted unsynced marker, online recovery, lifecycle-flush fallback, unsupported-version, payload-limit, and retention-cap results.
 - Full test, lint, type-check, build, and `git diff --check` output.
 - Browser evidence and the exact state of any migration, push, merge, or deployment.
