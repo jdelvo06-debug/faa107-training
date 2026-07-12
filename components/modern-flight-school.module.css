@@ -61,7 +61,7 @@
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 .flightHeader { position: relative; z-index: 40; padding-top: env(safe-area-inset-top); border-bottom: 1px solid rgba(10, 70, 66, 0.09); background: rgba(251, 247, 238, 0.97); }
-.flightHeaderInner { width: min(100%, 1480px); min-height: 76px; margin: 0 auto; padding: 0 32px; display: grid; grid-template-columns: minmax(210px, 0.9fr) auto minmax(145px, 0.7fr); align-items: center; gap: 20px; }
+.flightHeaderInner { width: min(100%, 1480px); min-height: 76px; margin: 0 auto; padding: 0 32px; display: grid; grid-template-columns: minmax(210px, 0.9fr) auto minmax(250px, 0.9fr); align-items: center; gap: 20px; }
 .flightBrand { display: inline-flex; align-items: center; gap: 12px; color: var(--flight-teal); font-size: 20px; font-weight: 750; letter-spacing: -0.03em; }
 .flightBrand svg { width: 34px; height: 34px; color: var(--flight-coral); stroke-width: 2.3; }
 .flightNav { display: flex; align-items: center; justify-content: center; gap: 18px; }
@@ -71,6 +71,17 @@
 .headerCta { justify-self: end; min-height: 48px; padding: 0 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: var(--flight-coral); color: #fff; font-weight: 750; }
 .headerCta:hover { background: var(--flight-coral-dark); }
 .mobileMenuButton { display: none; border: 1px solid var(--flight-line); border-radius: 9px; background: var(--flight-paper); color: var(--flight-teal); }
+.headerActions { justify-self: end; display: flex; align-items: center; gap: 14px; }
+.authControlsDesktop, .authControlsMobile { align-items: center; gap: 12px; }
+.authControlsDesktop { display: flex; }
+.authControlsDesktop a, .authControlsDesktop button { min-height: 44px; padding: 0 5px; display: inline-flex; align-items: center; gap: 7px; border: 0; background: transparent; color: var(--flight-teal); font-size: 13px; font-weight: 700; cursor: pointer; }
+.authControlsDesktop a:last-child { padding-inline: 14px; border: 1px solid var(--flight-line); border-radius: 9px; background: var(--flight-paper); }
+.authControlsDesktop svg { width: 16px; height: 16px; }
+.authControlsMobile { display: none; }
+.authUserEmail { max-width: 150px; overflow: hidden; display: inline-flex; align-items: center; gap: 7px; color: var(--flight-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.authUserEmail svg { width: 16px; height: 16px; flex: 0 0 auto; }
+.authLoading { color: var(--flight-muted); font-size: 12px; }
+.navAuthStatus { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .eyebrow { margin: 0 0 12px; color: var(--flight-coral-dark); font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
 
 .landingHero { min-height: 570px; display: grid; grid-template-columns: minmax(440px, 42%) minmax(0, 58%); background: var(--flight-paper); }
@@ -110,6 +121,11 @@
 .progressSeal { width: 142px; height: 142px; flex: 0 0 auto; display: grid; place-content: center; text-align: center; border: 12px solid #dceee7; border-top-color: var(--flight-coral); border-radius: 50%; background: var(--flight-paper); }
 .progressSeal strong { font-size: 34px; line-height: 1; }
 .progressSeal span { margin-top: 7px; color: var(--flight-muted); font-size: 12px; }
+.dashboardSyncPrompt { margin-top: 26px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; border: 1px solid #c6dfe8; border-radius: 12px; background: var(--flight-sky); color: var(--flight-muted); }
+.dashboardSyncPrompt svg { width: 24px; height: 24px; flex: 0 0 auto; color: var(--flight-blue); }
+.dashboardSyncPrompt p { margin: 0; font-size: 14px; line-height: 1.5; }
+.dashboardSyncPrompt strong { color: var(--flight-teal); }
+.dashboardSyncPrompt a { color: var(--flight-blue); font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
 .resumeBand { margin-top: 46px; padding: 38px 42px; display: flex; align-items: center; justify-content: space-between; gap: 34px; border-radius: 22px; background: var(--flight-teal); color: #fff; }
 .resumeLabel { margin: 0 0 8px; color: #9cd8cd; font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
 .resumeBand h2 { margin: 0; font-size: 34px; letter-spacing: -0.035em; }
@@ -138,6 +154,34 @@
 .activityList a { grid-template-columns: 1fr 24px; font-size: 14px; }
 .resetButton { margin-top: 26px; min-height: 44px; padding: 0 16px; display: inline-flex; align-items: center; gap: 9px; border: 1px solid var(--flight-line); border-radius: 9px; background: transparent; color: var(--flight-muted); cursor: pointer; }
 .resetButton svg { width: 17px; height: 17px; }
+
+.authPage { min-height: calc(100vh - 76px); padding: 64px 24px 90px; display: grid; place-items: start center; background: linear-gradient(145deg, var(--flight-cream) 0 58%, var(--flight-sky) 58% 100%); }
+.authCard { width: min(100%, 560px); padding: 42px; border: 1px solid var(--flight-line); border-radius: 22px; background: rgba(255, 253, 248, 0.98); box-shadow: 0 24px 80px rgba(21, 69, 62, 0.11); }
+.authMark { width: 58px; height: 58px; margin-bottom: 24px; display: grid; place-items: center; border-radius: 50%; background: var(--flight-mint); color: var(--flight-coral); }
+.authMark svg { width: 30px; height: 30px; }
+.authCard h1 { margin: 0; color: var(--flight-teal); font-size: clamp(38px, 6vw, 54px); line-height: 0.98; letter-spacing: -0.055em; }
+.authCard > p:not(.eyebrow):not(.authSwitch) { margin: 20px 0 0; color: var(--flight-muted); line-height: 1.6; }
+.authIntro { max-width: 470px; }
+.authForm { margin-top: 30px; display: grid; gap: 10px; }
+.authForm label { margin-top: 8px; color: var(--flight-teal); font-size: 13px; font-weight: 750; }
+.authForm input { width: 100%; min-height: 50px; padding: 0 14px; border: 1px solid #b9cbc5; border-radius: 10px; background: #fff; color: var(--flight-teal); font: inherit; }
+.authForm input:focus { border-color: var(--flight-blue); outline: 3px solid rgba(21, 94, 142, 0.16); }
+.authStatus { min-height: 8px; }
+.authError, .authSuccess { margin: 7px 0 0; padding: 12px 14px; border-radius: 9px; font-size: 13px; line-height: 1.45; }
+.authError { background: #fbe9e5; color: #8b291f; }
+.authSuccess { background: var(--flight-mint); color: var(--flight-teal-dark); }
+.authPrimaryAction, .authGoogleAction { width: 100%; min-height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 12px; border-radius: 10px; font-weight: 750; cursor: pointer; }
+.authPrimaryAction { border: 1px solid var(--flight-coral); background: var(--flight-coral); color: #fff; }
+.authPrimaryAction:hover { background: var(--flight-coral-dark); }
+.authPrimaryAction svg, .authGoogleAction svg { width: 19px; height: 19px; }
+.authPrimaryAction:disabled, .authGoogleAction:disabled { cursor: wait; opacity: 0.65; }
+.authDivider { margin: 24px 0; display: flex; align-items: center; gap: 12px; color: var(--flight-muted); font-size: 12px; text-transform: uppercase; }
+.authDivider::before, .authDivider::after { content: ""; height: 1px; flex: 1; background: var(--flight-line); }
+.authGoogleAction { border: 1px solid var(--flight-line); background: #fff; color: var(--flight-teal); }
+.authGoogleAction:hover { background: var(--flight-mint); }
+.authSwitch { margin: 24px 0 0; color: var(--flight-muted); text-align: center; font-size: 14px; }
+.authSwitch a, .authContinueLink { color: var(--flight-blue); font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
+.authContinueLink { min-height: 44px; margin-top: 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 13px; }
 
 .examCard { width: min(calc(100% - 48px), 1160px); margin: 64px auto 100px; border: 1px solid var(--flight-line) !important; border-radius: 22px !important; background: var(--flight-paper) !important; color: var(--flight-teal) !important; box-shadow: 0 22px 70px rgba(21, 69, 62, 0.08) !important; }
 .examCard :global(.text-white), .examCard :global(.text-slate-100), .examCard :global(.text-slate-200), .examCard :global(.text-slate-300) { color: var(--flight-teal) !important; }
@@ -232,7 +276,11 @@
   .flightNav { position: absolute; top: calc(68px + env(safe-area-inset-top)); right: 0; left: 0; display: none; max-height: calc(100vh - 68px - env(safe-area-inset-top)); overflow-y: auto; padding: 14px max(24px, env(safe-area-inset-right)) calc(22px + env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left)); flex-direction: column; align-items: stretch; gap: 0; border-bottom: 1px solid var(--flight-line); background: var(--flight-paper); box-shadow: 0 20px 44px rgba(16, 61, 56, 0.12); }
   .flightNavOpen { display: flex; }
   .flightNav a { padding: 14px 2px; border-bottom: 1px solid var(--flight-line); font-size: 14px; }
-  .flightNav a::after, .headerCta { display: none; }
+  .flightNav a::after, .headerActions { display: none; }
+  .authControlsMobile { padding-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .authControlsMobile a, .authControlsMobile button { min-height: 46px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--flight-line); border-radius: 9px; background: var(--flight-paper); color: var(--flight-teal); font-weight: 750; cursor: pointer; }
+  .authControlsMobile a:last-child { border-color: var(--flight-coral); background: var(--flight-coral); color: #fff; }
+  .authControlsMobile .authUserEmail { max-width: none; justify-content: flex-start; border: 0; grid-column: 1 / -1; }
 }
 
 @media (max-width: 1040px) {
@@ -267,6 +315,10 @@
   .dashboardFacts > div { border-right: 0; border-bottom: 1px solid var(--flight-line); }
   .guidancePanel, .activityPanel { padding: 24px 20px; }
   .sectionHeading { align-items: flex-start; flex-direction: column; }
+  .dashboardSyncPrompt { align-items: flex-start; }
+  .authPage { min-height: calc(100vh - 68px); padding: 30px 16px 64px; }
+  .authCard { padding: 30px 22px; border-radius: 16px; }
+  .authCard h1 { font-size: 40px; }
   .examCard { width: min(calc(100% - 32px), 1160px); margin-block: 36px 72px; }
   .examStart { padding: 8px; }
   .examPageTitle, .examReviewTitle { font-size: 48px !important; }

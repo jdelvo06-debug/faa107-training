@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, PlaneTakeoff, X } from "lucide-react";
+import { LogOut, Menu, PlaneTakeoff, UserRound, X } from "lucide-react";
+import { useAuth } from "@/components/auth-provider";
 import styles from "./modern-flight-school.module.css";
 
 const links = [
@@ -21,6 +22,29 @@ const links = [
 export function ModernFlightSchoolShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const { user, loading, signOut } = useAuth();
+
+  function handleSignOut() {
+    setAuthError(null);
+    void signOut().catch(() => setAuthError("Sign out failed. Please try again."));
+  }
+
+  const authControls = (className: string) => (
+    <div className={className}>
+      {loading ? <span className={styles.authLoading}>Checking account…</span> : user ? (
+        <>
+          <span className={styles.authUserEmail} title={user.email}><UserRound aria-hidden="true" />{user.email}</span>
+          <button type="button" onClick={handleSignOut}><LogOut aria-hidden="true" />Sign out</button>
+        </>
+      ) : (
+        <>
+          <Link href="/login" onClick={() => setMenuOpen(false)}>Log in</Link>
+          <Link href="/signup" onClick={() => setMenuOpen(false)}>Sign up</Link>
+        </>
+      )}
+    </div>
+  );
 
   return (
     <div className={styles.flightPage}>
@@ -59,9 +83,14 @@ export function ModernFlightSchoolShell({ children }: { children: React.ReactNod
                 </Link>
               );
             })}
+            {authControls(styles.authControlsMobile)}
           </nav>
-          <Link href="/modules/1" className={styles.headerCta}>Start learning</Link>
+          <div className={styles.headerActions}>
+            {authControls(styles.authControlsDesktop)}
+            <Link href="/modules/1" className={styles.headerCta}>Start learning</Link>
+          </div>
         </div>
+        <p className={styles.navAuthStatus} aria-live="polite">{authError}</p>
       </header>
       <main className={pathname === "/" ? undefined : styles.flightContent}>{children}</main>
     </div>
