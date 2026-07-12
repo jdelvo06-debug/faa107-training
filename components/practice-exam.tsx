@@ -41,6 +41,7 @@ import type {
   QuizQuestion,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import styles from "./modern-flight-school.module.css";
 
 const FAA_EXAM_SECONDS = 120 * 60;
 const DRILL_QUESTION_COUNT = 60;
@@ -243,7 +244,7 @@ export function PracticeExam({ questions }: { questions: QuizQuestion[] }) {
 
   if (!ready) {
     return (
-      <Card className="border-white/10 bg-aviation-panel shadow-cockpit">
+      <Card className={styles.examCard}>
         <CardContent className="p-6 text-slate-300">Loading assessment options…</CardContent>
       </Card>
     );
@@ -253,7 +254,7 @@ export function PracticeExam({ questions }: { questions: QuizQuestion[] }) {
     const percent = Math.round((completionFallback.score / completionFallback.total) * 100);
     const messaging = getExamResultMessaging(completionFallback.variant, completionFallback.passed);
     return (
-      <Card className="border-white/10 bg-aviation-panel shadow-cockpit">
+      <Card className={styles.examCard}>
         <CardHeader>
           <Badge variant={completionFallback.passed ? "sky" : "amber"} className="w-fit">
             {messaging.label}
@@ -273,16 +274,16 @@ export function PracticeExam({ questions }: { questions: QuizQuestion[] }) {
 
   if (!started) {
     return (
-      <Card className="border-white/10 bg-aviation-panel shadow-cockpit">
+      <Card className={`${styles.examCard} ${styles.examStart}`}>
         <CardHeader>
           <Badge variant="sky" className="w-fit">Choose your practice format</Badge>
-          <CardTitle className="max-w-3xl text-4xl text-white">Assessment Experience</CardTitle>
+          <h1 className={styles.examPageTitle}>Calm focus for test-day decisions.</h1>
           <p className="max-w-2xl text-sm leading-6 text-slate-300">
             Choose the closest FAA-style simulation or a broader study drill. Neither option is the actual FAA knowledge test.
           </p>
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-2">
-          <div className="rounded-xl border border-amber-300/25 bg-amber-300/[0.06] p-5">
+          <div className={styles.examOption}>
             <Plane className="h-8 w-8 text-amber-300" />
             <h2 className="mt-4 text-2xl font-bold text-white">FAA-like Timed Exam</h2>
             <p className="mt-2 text-sm leading-6 text-slate-300">
@@ -297,7 +298,7 @@ export function PracticeExam({ questions }: { questions: QuizQuestion[] }) {
               Start FAA-like exam
             </Button>
           </div>
-          <div className="rounded-xl border border-sky-300/25 bg-sky-300/[0.06] p-5">
+          <div className={styles.examOption}>
             <BookOpenCheck className="h-8 w-8 text-sky-300" />
             <h2 className="mt-4 text-2xl font-bold text-white">Practice Drill</h2>
             <p className="mt-2 text-sm leading-6 text-slate-300">
@@ -319,8 +320,8 @@ export function PracticeExam({ questions }: { questions: QuizQuestion[] }) {
 
   if (reviewOpen) {
     return (
-      <div className="grid gap-5">
-        <Card className="border-white/10 bg-aviation-panel shadow-cockpit">
+      <div className={styles.examReview}>
+        <Card className={styles.examCard}>
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <Badge variant={variant === "practice_drill" ? "sky" : "amber"}>
@@ -330,15 +331,15 @@ export function PracticeExam({ questions }: { questions: QuizQuestion[] }) {
                 <span className="flex items-center gap-2 text-sm text-slate-300"><Timer className="h-4 w-4 text-primary" />{formatTime(secondsLeft)}</span>
               ) : null}
             </div>
-            <CardTitle className="text-3xl text-white">Review answers</CardTitle>
+            <h1 className={styles.examReviewTitle}>Review your answers</h1>
           </CardHeader>
           <CardContent className="grid gap-5">
-            <div className="grid grid-cols-3 gap-3 text-center">
+            <div className={styles.examReviewSummary}>
               <div className="rounded-lg border border-emerald-300/20 p-3"><p className="text-2xl font-bold text-white">{reviewSummary.answered}</p><p className="text-xs text-slate-400">Answered</p></div>
               <div className="rounded-lg border border-white/10 p-3"><p className="text-2xl font-bold text-white">{reviewSummary.unanswered}</p><p className="text-xs text-slate-400">Unanswered</p></div>
               <div className="rounded-lg border border-amber-300/20 p-3"><p className="text-2xl font-bold text-white">{reviewSummary.flagged}</p><p className="text-xs text-slate-400">Flagged</p></div>
             </div>
-            <div className="grid grid-cols-5 gap-2 sm:grid-cols-10" aria-label="Question review grid">
+            <div className={styles.examReviewGrid} aria-label="Question review grid">
               {pool.map((item, questionIndex) => (
                 <button
                   key={item.sourceQuestionId}
@@ -350,6 +351,7 @@ export function PracticeExam({ questions }: { questions: QuizQuestion[] }) {
                     setConfirmUnanswered(false);
                   }}
                   className={cn(
+                    styles.examReviewButton,
                     "h-11 rounded-md border text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                     answers[item.sourceQuestionId] !== undefined && "border-emerald-300/30 bg-emerald-300/15 text-emerald-50",
                     answers[item.sourceQuestionId] === undefined && "border-white/10 text-slate-300",
@@ -362,10 +364,10 @@ export function PracticeExam({ questions }: { questions: QuizQuestion[] }) {
             </div>
             <Dialog.Root open={confirmUnanswered} onOpenChange={setConfirmUnanswered}>
               <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-950/80" />
-                <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-amber-300/30 bg-aviation-panel p-6 shadow-2xl focus:outline-none">
-                  <Dialog.Title className="font-bold text-amber-50">Submit with {reviewSummary.unanswered} unanswered question{reviewSummary.unanswered === 1 ? "" : "s"}?</Dialog.Title>
-                  <Dialog.Description className="mt-2 text-sm text-amber-100">Unanswered questions will be scored incorrect.</Dialog.Description>
+                <Dialog.Overlay className={styles.examDialogOverlay} />
+                <Dialog.Content className={styles.examDialogContent}>
+                  <Dialog.Title className={styles.examDialogTitle}>Submit with {reviewSummary.unanswered} unanswered question{reviewSummary.unanswered === 1 ? "" : "s"}?</Dialog.Title>
+                  <Dialog.Description className={styles.examDialogDescription}>Unanswered questions will be scored incorrect.</Dialog.Description>
                   <div className="mt-5 flex flex-wrap justify-end gap-3">
                     <Dialog.Close asChild><Button variant="outline">Cancel</Button></Dialog.Close>
                     <Button onClick={submitExam}>Submit anyway</Button>
@@ -386,8 +388,8 @@ export function PracticeExam({ questions }: { questions: QuizQuestion[] }) {
   }
 
   return (
-    <Card className="border-white/10 bg-aviation-panel shadow-cockpit">
-      <CardHeader>
+    <Card className={`${styles.examCard} ${styles.examActive}`}>
+      <CardHeader className={styles.examActiveHeader}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Badge variant={variant === "practice_drill" ? "sky" : "amber"}>
             {variant === "faa_timed" ? "FAA-like Timed Exam · answer locks" : variant === "legacy_timed" ? "Resumed legacy timed practice exam · answer locks" : "Practice Drill · answers may change"}
@@ -402,11 +404,12 @@ export function PracticeExam({ questions }: { questions: QuizQuestion[] }) {
             Exam progress will not survive a refresh in this browser.
           </p>
         ) : null}
-        <CardTitle id={`question-prompt-${question.sourceQuestionId}`} className="pt-4 text-2xl leading-tight text-white">
-          Question {index + 1}. {question.prompt}
-        </CardTitle>
+        <h1 className={styles.examActiveTitle}>Calm focus for test-day decisions.</h1>
+        <h2 id={`question-prompt-${question.sourceQuestionId}`} className={styles.examQuestionTitle}>
+          <span>Question {index + 1}</span>{question.prompt}
+        </h2>
       </CardHeader>
-      <CardContent className="grid gap-4">
+      <CardContent className={styles.examQuestionBody}>
         <fieldset aria-labelledby={`question-prompt-${question.sourceQuestionId}`} className="m-0 min-w-0 border-0 p-0 grid gap-3">
           <legend className="sr-only">Answer choices</legend>
           <div role="radiogroup" aria-labelledby={`question-prompt-${question.sourceQuestionId}`} className="grid gap-3">
@@ -422,6 +425,8 @@ export function PracticeExam({ questions }: { questions: QuizQuestion[] }) {
                   disabled={locked}
                   onClick={() => selectAnswer(question.sourceQuestionId, choiceIndex)}
                   className={cn(
+                    styles.examAnswer,
+                    selected && styles.examAnswerSelected,
                     "min-h-14 rounded-lg border p-4 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-80",
                     selected ? "border-primary bg-primary/15 text-white" : "border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.07]",
                   )}

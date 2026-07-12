@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ACS_TOPIC_WEIGHTS } from "@/lib/acs-weights";
+import styles from "@/components/modern-flight-school.module.css";
 
 export const metadata: Metadata = {
   title: "FAA Part 107 Cram Sheet",
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function CramSheetPage() {
   return (
-    <div className="print:bg-white print:text-black mx-auto max-w-4xl grid gap-8 print:gap-4 px-4 sm:px-0">
+    <div className={`${styles.coursePage} print:bg-white print:text-black mx-auto max-w-4xl grid gap-8 print:gap-4 px-4 sm:px-0`}>
       <div className="print:hidden">
         <h1 className="text-4xl font-bold tracking-normal">Part 107 Cram Sheet</h1>
         <p className="mt-2 max-w-3xl text-muted-foreground">

@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Free FAA Part 107 remote pilot certification study platform",
     start_url: "/",
     display: "standalone",
-    background_color: "#061525",
-    theme_color: "#f59e0b",
+    background_color: "#fbf7ee",
+    theme_color: "#b83a1a",
     icons: [
       {
         src: "/icons/icon-192.png",

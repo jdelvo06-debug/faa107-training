@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { modules } from "@/lib/course-data";
+import styles from "@/components/modern-flight-school.module.css";
 
 export const metadata: Metadata = {
   title: "FAA Part 107 Course Modules",
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function ModulesPage() {
   return (
-    <div className="grid gap-6">
+    <div className={`${styles.coursePage} grid gap-6`}>
       <div>
         <Badge variant="sky">13-module path</Badge>
         <h1 className="mt-3 text-4xl font-bold tracking-normal">Course modules</h1>

@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { addActivity, saveFlashcardProgress, useProgress } from "@/lib/progress-storage";
 import { flashcardActivityHref } from "@/lib/learning-routes";
 import type { Flashcard } from "@/lib/types";
+import styles from "./modern-flight-school.module.css";
 
 function shuffled<T>(items: T[]) {
   return [...items].sort(() => Math.random() - 0.5);
@@ -39,7 +40,7 @@ export function FlashcardDeck({
 
   if (cards.length === 0) {
     return (
-      <Card>
+      <Card className={styles.coursePage}>
         <CardHeader>
           <CardTitle>Flashcards coming soon</CardTitle>
         </CardHeader>
@@ -65,7 +66,7 @@ export function FlashcardDeck({
   }
 
   return (
-    <div className="grid gap-5">
+    <div className={`${styles.coursePage} grid gap-5`}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold tracking-normal">{title}</h1>
