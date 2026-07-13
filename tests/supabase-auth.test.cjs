@@ -454,6 +454,7 @@ test("auth provider exposes user state, progress sync, reset, and sign out to th
   assert.match(provider, /pagehide/);
   assert.match(provider, /online/);
   assert.match(provider, /focus/);
+  assert.match(provider, /flush\("foreground"\)/);
   assert.match(provider, /progressSync/);
   assert.match(provider, /resetProgress/);
   assert.match(provider, /signOut/);

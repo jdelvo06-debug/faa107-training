@@ -41,7 +41,7 @@ export interface ProgressSyncCoordinator {
   authTokenChanged(token: string): Promise<void>;
   localWrite(): void;
   reset(): Promise<void>;
-  flush(reason: "debounce" | "online" | "visibility" | "pagehide"): Promise<void>;
+  flush(reason: "debounce" | "online" | "foreground" | "visibility" | "pagehide"): Promise<void>;
   subscribe(listener: (snapshot: ProgressSyncSnapshot) => void): () => void;
   dispose(): void;
 }
@@ -229,6 +229,14 @@ export function createProgressSyncCoordinator(dependencies: ProgressSyncDependen
     });
   }
 
+  function discardSupersededWork(): void {
+    pendingResetOperationId = null;
+    pendingCommit = null;
+    transitionWrite = null;
+    blockedContext = null;
+    clearAllTimers();
+  }
+
   async function handleRealtime(context: OwnerContext, remote: ProgressRemoteRow): Promise<void> {
     if (!current(context)) return;
     const cached = readAuthenticatedCache(dependencies.storage, context.userId, now());
@@ -253,7 +261,7 @@ export function createProgressSyncCoordinator(dependencies: ProgressSyncDependen
         notify(context);
         await commitCurrent(context);
       } else {
-        blockedContext = null;
+        discardSupersededWork();
         adopt(context, remote);
         publish(context, "synced", null);
       }
@@ -261,7 +269,7 @@ export function createProgressSyncCoordinator(dependencies: ProgressSyncDependen
     }
     if (localGeneration !== remote.resetGeneration || localEpoch !== remote.resetEpoch) {
       if (localRevision === null || compareDecimal(remote.revision, localRevision) > 0) {
-        blockedContext = null;
+        discardSupersededWork();
         adopt(context, remote);
         resetBackoff();
         publish(context, "synced", null);
@@ -566,7 +574,7 @@ export function createProgressSyncCoordinator(dependencies: ProgressSyncDependen
     }
   }
 
-  async function flush(reason: "debounce" | "online" | "visibility" | "pagehide"): Promise<void> {
+  async function flush(reason: "debounce" | "online" | "foreground" | "visibility" | "pagehide"): Promise<void> {
     clearTimer("debounce");
     if (reason === "online") clearTimer("retry");
     const context = activeUserId ? { userId: activeUserId, epoch: sessionEpoch } : null;
@@ -578,7 +586,7 @@ export function createProgressSyncCoordinator(dependencies: ProgressSyncDependen
         await performReset(context, pendingResetOperationId);
         return;
       }
-      if (reason === "online") {
+      if (reason === "online" || reason === "foreground") {
         await startup(context);
         return;
       }
@@ -629,7 +637,8 @@ export function createProgressSyncCoordinator(dependencies: ProgressSyncDependen
       const context = userId ? { userId, epoch: sessionEpoch } : null;
       return enqueue(async () => {
         if (!context || !current(context)) return;
-        dependencies.rpc.refreshRealtimeAuth(token);
+        await dependencies.rpc.refreshRealtimeAuth(token);
+        if (!current(context)) return;
         if (isBlocked(context)) return;
         if (pendingResetOperationId) {
           await performReset(context, pendingResetOperationId);

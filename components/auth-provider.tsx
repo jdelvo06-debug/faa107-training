@@ -58,12 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const flushOnline = () => { void coordinator.flush("online").catch(() => {}); };
+    const flushForeground = () => { void coordinator.flush("foreground").catch(() => {}); };
     const flushVisibility = () => {
-      void coordinator.flush(document.visibilityState === "hidden" ? "visibility" : "online").catch(() => {});
+      void coordinator.flush(document.visibilityState === "visible" ? "foreground" : "visibility").catch(() => {});
     };
     const flushPagehide = () => { void coordinator.flush("pagehide").catch(() => {}); };
     window.addEventListener("online", flushOnline);
-    window.addEventListener("focus", flushOnline);
+    window.addEventListener("focus", flushForeground);
     document.addEventListener("visibilitychange", flushVisibility);
     window.addEventListener("pagehide", flushPagehide);
 
@@ -101,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       unsubscribeSync();
       unsubscribeWrites();
       window.removeEventListener("online", flushOnline);
-      window.removeEventListener("focus", flushOnline);
+      window.removeEventListener("focus", flushForeground);
       document.removeEventListener("visibilitychange", flushVisibility);
       window.removeEventListener("pagehide", flushPagehide);
       coordinator.dispose();

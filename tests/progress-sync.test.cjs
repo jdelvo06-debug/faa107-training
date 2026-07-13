@@ -146,7 +146,7 @@ class FakeRpc {
     this.subscriptions.push(subscription);
     return () => { subscription.removed = true; };
   }
-  refreshRealtimeAuth(token) {
+  async refreshRealtimeAuth(token) {
     this.tokens.push(token);
   }
 }
@@ -177,10 +177,7 @@ function harness(overrides = {}) {
 test("RPC adapter uses owner-only SELECT, approved RPCs, bigint strings, and owner-filtered Realtime", async () => {
   const { createProgressRpcAdapter } = loadTypeScriptModule("lib/progress-rpc");
   const calls = [];
-  const channel = {
-    on(kind, filter, callback) { calls.push(["on", kind, filter]); this.callback = callback; return this; },
-    subscribe() { calls.push(["subscribe"]); return this; },
-  };
+  const channels = [];
   const client = {
     from(table) {
       calls.push(["from", table]);
@@ -196,8 +193,17 @@ test("RPC adapter uses owner-only SELECT, approved RPCs, bigint strings, and own
       calls.push(["rpc", name, args]);
       return { data: [{ status: name === "reset_faa107_progress" ? "reset" : "current", progress: emptyProgress(), revision: "9007199254740993", reset_generation: GEN_A, reset_epoch: "9007199254740995" }], error: null };
     },
-    channel(name) { calls.push(["channel", name]); return channel; },
-    realtime: { setAuth(token) { calls.push(["setAuth", token]); } },
+    channel(name) {
+      calls.push(["channel", name]);
+      const channel = {
+        name,
+        on(kind, filter, callback) { calls.push(["on", kind, filter]); this.callback = callback; return this; },
+        subscribe() { calls.push(["subscribe", name]); return this; },
+      };
+      channels.push(channel);
+      return channel;
+    },
+    realtime: { async setAuth(token) { calls.push(["setAuth", token]); } },
     async removeChannel(value) { calls.push(["removeChannel", value]); },
   };
   const adapter = createProgressRpcAdapter(client);
@@ -208,16 +214,30 @@ test("RPC adapter uses owner-only SELECT, approved RPCs, bigint strings, and own
   });
   await adapter.commit({ expectedRevision: null, expectedGeneration: null, baseProgress: emptyProgress(), proposedProgress: emptyProgress(), operationId: "00000000-0000-4000-8000-000000000001" });
   assert.equal((await adapter.reset({ operationId: "00000000-0000-4000-8000-000000000002" })).status, "reset");
-  const remove = adapter.subscribe(USER_A, () => {});
-  adapter.refreshRealtimeAuth("fresh-token");
+  let realtimeRow = null;
+  const remove = adapter.subscribe(USER_A, (remote) => { realtimeRow = remote; });
+  channels[0].callback({ new: {
+    user_id: USER_A,
+    progress: emptyProgress(),
+    revision: 9,
+    reset_generation: GEN_B,
+    reset_epoch: 1,
+  } });
+  const removeAgain = adapter.subscribe(USER_A, () => {});
+  const authRefresh = adapter.refreshRealtimeAuth("fresh-token");
+  assert.equal(typeof authRefresh?.then, "function");
+  await authRefresh;
   remove();
+  removeAgain();
   assert.ok(calls.some((call) => call[0] === "select" && /user_id/.test(call[1])));
   assert.ok(calls.some((call) => call[0] === "eq" && call[1] === "user_id" && call[2] === USER_A));
   assert.deepEqual(calls.filter((call) => call[0] === "rpc").map((call) => call[1]), ["commit_faa107_progress", "reset_faa107_progress"]);
   assert.ok(calls.some((call) => call[0] === "on" && call[2].filter === `user_id=eq.${USER_A}`));
+  assert.deepEqual(realtimeRow, row({ revision: "9", generation: GEN_B, epoch: "1" }));
+  assert.equal(new Set(calls.filter((call) => call[0] === "channel").map((call) => call[1])).size, 2);
   assert.ok(calls.some((call) => call[0] === "setAuth" && call[1] === "fresh-token"));
   await Promise.resolve();
-  assert.ok(calls.some((call) => call[0] === "removeChannel" && call[1] === channel));
+  assert.equal(calls.filter((call) => call[0] === "removeChannel").length, 2);
   assert.equal(calls.some((call) => ["insert", "update", "upsert", "delete"].includes(call[0])), false);
 });
 
@@ -555,6 +575,90 @@ test("generation mismatch and Realtime reset discard stale candidates and conver
   await h.coordinator.flush("visibility");
   cached = JSON.parse(h.storage.values.get(`faa107-progress-v1:${USER_A}`));
   assert.equal(cached.resetEpoch, "2");
+});
+
+test("Realtime reset discards a failed queued candidate before the next local write", async () => {
+  const { readAuthenticatedCache, writeAuthenticatedCache } = loadTypeScriptModule("lib/progress-cache");
+  const h = harness();
+  h.rpc.fetchImpl = async () => ({ status: "ok", row: row({
+    progress: progressWithSlide("m1-1"), revision: "1",
+  }) });
+  await h.coordinator.authChanged({ id: USER_A });
+
+  const beforeWrite = readAuthenticatedCache(h.storage, USER_A, NOW).envelope;
+  writeAuthenticatedCache(h.storage, USER_A, {
+    ...beforeWrite,
+    progress: progressWithSlide("m1-2"),
+  }, NOW);
+  h.rpc.commitImpl = async () => { throw Object.assign(new Error("offline"), { kind: "transient" }); };
+  h.coordinator.localWrite();
+  await h.coordinator.flush("debounce");
+  assert.equal(h.rpc.commits.length, 1);
+  const staleOperationId = h.rpc.commits[0].operationId;
+
+  const statusEvidence = [];
+  const unsubscribe = h.coordinator.subscribe((snapshot) => {
+    const cached = readAuthenticatedCache(h.storage, USER_A, NOW);
+    statusEvidence.push({
+      status: snapshot.status,
+      generation: cached.status === "ok" ? cached.envelope.resetGeneration : null,
+    });
+  });
+  h.rpc.subscriptions.at(-1).listener(row({ revision: "9", generation: GEN_B, epoch: "1" }));
+  await h.coordinator.flush("visibility");
+  let cached = readAuthenticatedCache(h.storage, USER_A, NOW).envelope;
+  assert.deepEqual(cached.progress, emptyProgress());
+  assert.equal(cached.resetGeneration, GEN_B);
+  assert.deepEqual(statusEvidence.at(-1), { status: "synced", generation: GEN_B });
+
+  writeAuthenticatedCache(h.storage, USER_A, {
+    ...cached,
+    progress: progressWithSlide("m1-3"),
+  }, NOW);
+  h.rpc.commitImpl = async (input) => result("current", {
+    progress: input.proposedProgress,
+    revision: "10",
+    generation: GEN_B,
+    epoch: "1",
+  });
+  h.coordinator.localWrite();
+  await h.coordinator.flush("debounce");
+  assert.equal(h.rpc.commits[1].expectedGeneration, GEN_B);
+  assert.notEqual(h.rpc.commits[1].operationId, staleOperationId);
+  assert.deepEqual(h.rpc.commits[1].proposedProgress, progressWithSlide("m1-3"));
+  unsubscribe();
+});
+
+test("foreground fallback fetch adopts a missed remote reset before reporting synced", async () => {
+  const { readAuthenticatedCache } = loadTypeScriptModule("lib/progress-cache");
+  const h = harness();
+  h.rpc.fetchImpl = async () => ({ status: "ok", row: row({
+    progress: progressWithSlide("m1-1"), revision: "1",
+  }) });
+  await h.coordinator.authChanged({ id: USER_A });
+  h.rpc.fetchImpl = async () => ({ status: "ok", row: row({
+    revision: "9", generation: GEN_B, epoch: "1",
+  }) });
+  const evidence = [];
+  const unsubscribe = h.coordinator.subscribe((snapshot) => {
+    const cached = readAuthenticatedCache(h.storage, USER_A, NOW);
+    evidence.push({
+      status: snapshot.status,
+      generation: cached.status === "ok" ? cached.envelope.resetGeneration : null,
+    });
+  });
+
+  await h.coordinator.flush("foreground");
+
+  const cached = readAuthenticatedCache(h.storage, USER_A, NOW).envelope;
+  assert.equal(h.rpc.fetches.length, 2);
+  assert.deepEqual(cached.progress, emptyProgress());
+  assert.equal(cached.resetGeneration, GEN_B);
+  assert.deepEqual(evidence.slice(-2), [
+    { status: "saving", generation: GEN_A },
+    { status: "synced", generation: GEN_B },
+  ]);
+  unsubscribe();
 });
 
 test("Realtime epoch-zero creation preserves a dirty null-generation first candidate", async () => {

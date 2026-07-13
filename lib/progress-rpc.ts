@@ -49,7 +49,7 @@ export interface ProgressRpcAdapter {
   commit(input: ProgressCommitInput, signal?: AbortSignal): Promise<ProgressRpcResult>;
   reset(input: ProgressResetInput, signal?: AbortSignal): Promise<ProgressResetResult>;
   subscribe(userId: string, listener: (row: ProgressRemoteRow) => void): () => void;
-  refreshRealtimeAuth(token: string): void;
+  refreshRealtimeAuth(token: string): Promise<void>;
 }
 
 type DatabaseError = {
@@ -141,6 +141,8 @@ function resetResult(value: unknown): ProgressResetResult {
 }
 
 export function createProgressRpcAdapter(client: SupabaseClient): ProgressRpcAdapter {
+  let subscriptionSequence = 0;
+
   return {
     async fetch(userId, signal) {
       if (!UUID_PATTERN.test(userId)) throw new Error("Progress owner must be a valid lowercase UUID");
@@ -181,7 +183,7 @@ export function createProgressRpcAdapter(client: SupabaseClient): ProgressRpcAda
     subscribe(userId, listener) {
       if (!UUID_PATTERN.test(userId)) throw new Error("Progress owner must be a valid lowercase UUID");
       const channel = client
-        .channel(`faa107-progress-${userId}`)
+        .channel(`faa107-progress-${userId}-${++subscriptionSequence}`)
         .on(
           "postgres_changes",
           {
@@ -205,7 +207,7 @@ export function createProgressRpcAdapter(client: SupabaseClient): ProgressRpcAda
     },
 
     refreshRealtimeAuth(token) {
-      client.realtime.setAuth(token);
+      return client.realtime.setAuth(token);
     },
   };
 }
