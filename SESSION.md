@@ -1,134 +1,105 @@
 # FAA 107 — Session Tracking
 
 ## Current Status
-- **Phase:** Remediation complete — Phases 0–3B pushed to GitHub
-- **Last Updated:** 2026-07-11
-- **Live URL:** [faa107-training.vercel.app](https://faa107-training.vercel.app)
-- **Branch:** `codex/faa107-training-platform`
-- **Test suite:** 44 behavioral tests (package-free Node test runner)
-- **Build:** 52 static pages, clean lint, clean TypeScript
 
-## Remediation History (2026-07-09 to 2026-07-11)
+- **Last reconciled:** 2026-07-12
+- **Production:** [faa107training.org](https://faa107training.org)
+- **Production/default branch:** `codex/faa107-training-platform`
+- **Deployed application commit:** `411a2b7`
+- **Hosting:** Vercel
+- **Backend:** Supabase project `qbeioesktbpvdlgzrgsm`
+- **Auth:** email/password and Google OAuth are deployed; Apple Sign In is deferred
+- **Progress:** anonymous learning is local-only; signed-in progress is local-first and synchronized to one user-scoped Supabase row with account-wide reset support
+- **Database:** shared migration `20260712000000_account_progress_sync.sql` is applied
 
-### Phase 0 — Audit Baseline
-- Full code/content/UI/UX audit (51 findings: 16 P1, 24 P2, 7 P3, 4 observations)
-- Audit report: `docs/audits/2026-07-09-full-project-audit.md`
-- Commit: `87ee196`
+The application is no longer client-only/no-backend. Supabase handles authentication and signed-in progress persistence, while anonymous learners keep the original local-only behavior.
 
-### Phase 1 — Trust & Accuracy
-- Removed all public personal data (TS/SCI claims, military biography, retirement timeline, owner name)
-- Corrected FAA Part 107 content across all surfaces:
-  - Weather minima (14 CFR §107.51)
-  - Registration rules (all Part 107 drones must register, not just >0.55 lbs)
-  - Alcohol/BAC rules (§107.27 + §91.17: 8 hours, BAC ≥0.04)
-  - ACS weighting (single source of truth in `lib/acs-weights.ts`)
-  - Category 3 operations-over-people eligibility
-  - Exam reference guidance (FAA testing supplement)
-- Added 7 content regression tests
-- Commits: `8a2a91f`, `03653da`
+## Verification Truth
 
-### Phase 2A — Core Study Flow
-- Fixed study-plan 404 links (numeric `/modules/<n>` routes)
-- Fixed global flashcard dead activity route (`/modules/all/flashcards` → `/flashcards`)
-- Fixed stale timer submission (used current answers/flags, not closure snapshot)
-- Added resumable in-progress exam sessions (localStorage persistence)
-- Added duplicate-submit protection (timer + manual race)
-- Added storage-denied fallback (honest in-memory result, no crash)
-- Added expired/legacy session handling
-- Commits: `4241ed1`
+- Core real-browser proof passed for signed-in synchronization, clean-context restoration, A/B account isolation, and account-wide reset.
+- The first live open-tab Realtime propagation observation failed. The repair in `411a2b7` passed automated review and regression coverage.
+- The final live event retest was **inconclusive**, not a pass: the listening tab had no pre-reset record to invalidate. Keep this as a deferred soak observation using a listener that first holds known synced progress.
+- Realtime is an acceleration path only. RPC generation/revision rules plus refetch/reload behavior remain the correctness boundary.
 
-### Phase 2B — Assessment Integrity
-- **Slice 1 — Assessment engine** (`lib/assessment-engine.ts`)
-  - Deterministic FAA-style 60-question builder with exact ACS distribution
-  - Three-choice FAA presentation transform (keeps correct answer + 2 canonical distractors)
-  - Broad Practice Drill preserves canonical four-choice content
-  - Study vs Assessment quiz mode policies
-  - Commit: `8705cf8`
-- **Slice 2 — Assessment experience**
-  - Module quiz mode selector (Study Mode / Assessment Mode)
-  - Practice exam / drill chooser (FAA-like Timed Exam / Practice Drill)
-  - FAA timed exam: 60 questions, 120 minutes, exact ACS, 3-choice, answer locking
-  - Practice drill: broad pool, 4-choice, untimed, mutable answers
-  - Versioned session persistence with presentation metadata
-  - Final review gate with unanswered/flagged counts and submit confirmation
-  - Detailed post-exam answer review with explanations
-  - Variant-aware result messaging (exam vs drill vs legacy)
-  - Accessible Radix Dialog for unanswered-submit confirmation
-  - Legacy v1 session backward compatibility
-  - Expired FAA session auto-completion from saved snapshot
-  - Commit: `c7f23d5`
+## Release History
 
-### Phase 3A — Accessibility & Mobile Polish
-- Radio-group semantics for quiz/exam answer choices (fieldset, legend, role="radio", aria-checked)
-- aria-live regions for quiz feedback announcements
-- Progress bars expose aria-valuenow and aria-label
-- 44×44px touch targets on slide jump indicators
-- prefers-reduced-motion CSS overrides + Framer Motion useReducedMotion hook
-- Arrow key navigation scoped to slide viewer container (no more global interception)
-- Landing page mobile headline reduced, entrance animations bypassed on mobile
-- Cram-sheet mobile horizontal overflow eliminated (responsive table reflow at 390px)
-- Commit: `4b946e2`
+### Audit and remediation baseline — 2026-07-09 to 2026-07-11
 
-### Phase 3B — Dashboard & Study-Plan UX
-- Single "Resume Module X, slide Y" dashboard card (duplicate Continue removed)
-- SlideViewer restores exact slide on mount via existing lastSlideId
-- Weak areas link directly to relevant study modules
-- Study-plan shows module completion checkmarks, day completion counts, and recommended-day highlight
-- Resources and About added to primary navigation (desktop sidebar + mobile drawer)
-- Removed dead `getContinueTarget` function and unused import
-- Commit: `28fd6f3`
+- `87ee196` — recorded the 51-finding full-project audit baseline
+- `8a2a91f`, `03653da` — removed public personal data and corrected FAA regulatory/content issues
+- `4241ed1` — repaired routes and exam/session persistence behavior
+- `8705cf8`, `c7f23d5` — added deterministic FAA assessment construction, quiz modes, review gate, and answer review
+- `4b946e2` — accessibility and mobile remediation
+- `28fd6f3` — dashboard resume, weak-area links, study-plan feedback, and navigation improvements
 
-## What's Built
-- [x] Full 13-module curriculum with 250+ slides
-- [x] Quiz engine per module with Study Mode (immediate feedback) and Assessment Mode (locked answers)
-- [x] Practice exam: FAA-like Timed Exam (60 questions, 120 min, exact ACS, 3-choice) + Practice Drill (broad pool, 4-choice, untimed)
-- [x] 61 flashcards across all modules
-- [x] Cram sheet — printable Part 107 quick reference, mobile-responsive
-- [x] 7-day and 14-day study plans with completion feedback and recommended-day highlighting
-- [x] Dashboard with exact-slide resume, weak-area study links, and localStorage progress tracking
-- [x] Mobile-responsive dark aviation theme
-- [x] Accessibility: radio semantics, aria-live, reduced-motion, 44px touch targets, scoped keyboard nav
-- [x] Resumable exam sessions with storage-denied fallback
-- [x] Final review gate with unanswered/flagged submit confirmation
-- [x] Detailed post-exam answer review with explanations
-- [x] 44 behavioral regression tests (package-free Node test runner)
-- [x] Deployed to Vercel with auto-deploy on push
-- [x] Resources and About in primary navigation
+The audit remains historical evidence. Its original findings should not be read as a current-state checklist without comparing later commits.
 
-## Tech Stack
-- Next.js 14 (App Router), TypeScript, Tailwind CSS, shadcn/ui, Radix UI
-- Framer Motion (with reduced-motion support)
-- Client-side only, localStorage for progress
-- No backend needed
-- Package-free Node test runner (`node --test tests/*.test.cjs`)
+### Distribution, PWA/SEO, and design release
 
-## Key Decisions
-- Free platform (not monetized yet)
-- Target audience: both self-guided learners and classroom instructors
-- Full package: slides, quizzes, flashcards, practice exams, cram sheet, study plans
-- Mobile-friendly website (not native app)
-- Module quizzes support both Study Mode and Assessment Mode
-- Practice exams are hybrid: FAA-like Timed Exam + broad Practice Drill
-- Originally built for Nd3 Inc SkillBridge interview demo (May 8, 2026)
+- `5354045` — shipped the production design plus PWA metadata/icons, SEO metadata, sitemap/robots behavior, and iOS safe-area work
+- Custom production domain is `faa107training.org`
+- Deliberate offline caching/update behavior and real-device iPhone/VoiceOver verification remain open; already-shipped manifest/SEO/safe-area work is not backlog
 
-## Next Steps — Phase 4 (Distribution)
-- [ ] Purchase custom domain
-- [ ] Configure custom domain on Vercel
-- [ ] Add PWA manifest (`manifest.ts`), icons, theme color, display mode
-- [ ] Add offline shell/curriculum caching strategy
-- [ ] Add `robots.ts` and `sitemap.ts` for SEO
-- [ ] Add per-route metadata (canonical, Open Graph, Twitter card)
-- [ ] Add safe-area styles for iOS standalone mode
-- [ ] Version and test local progress migrations
-- [ ] Verify on actual iPhone Safari (standalone mode, rotation, VoiceOver)
-- [ ] Consider Capacitor wrapper if App Store presence is desired
-- [ ] Upgrade Vercel CLI (`npm i -g vercel@latest`)
+### Authentication
 
-## Known Backlog (non-blocking)
-- Radio group roving tabindex / arrow-key navigation (Phase 3A P2)
-- Arrow key filter for interactive elements inside slide container (Phase 3A P2)
-- Adjacent slide indicator 44px hit area overlap (Phase 3A P2)
-- Bundle/data split: separate lightweight module metadata from slide bodies (P-01)
-- Content governance: centralize rule facts with source URLs and reviewed dates (T-02)
-- CardTitle heading element ref type (T-03)
-- Optimize chart images (P-03: 6.1 MB PNGs)
+- `b8b100d` — deployed Supabase email/password and Google authentication
+- `9bc762e` — hardened callback and form behavior
+- Apple Sign In remains intentionally deferred
+- Configuration notes: `docs/supabase-auth-configuration.md`
+
+### Account-backed progress synchronization
+
+- `ad59509` — database/RLS security foundation
+- `d70e6e0` — canonical progress model
+- `ab55654` — atomic progress RPCs
+- `6ccfe35` — concurrent reset-race coverage
+- `a167620` — account progress synchronization
+- `1cfa8ec` — stale auth initialization guard
+- `0cd316b` — sync status UI
+- `f15f374` — reset guard during auth loading
+- `411a2b7` — remote reset propagation repair
+
+Deployment facts:
+
+- Migration `supabase/migrations/20260712000000_account_progress_sync.sql` is applied to `qbeioesktbpvdlgzrgsm`.
+- Anonymous progress remains browser-local and is not uploaded merely because Supabase exists.
+- Authenticated caches and server data are user-scoped; switching accounts does not share progress.
+- Signed-in progress restores across clean contexts and can be reset account-wide.
+
+## Current Architecture
+
+- Next.js 14 App Router, React 18, TypeScript 5.9, Tailwind CSS, Radix/shadcn UI, and Framer Motion
+- Supabase SSR/client helpers for auth and session refresh
+- Local synchronous storage funnel for learning UI, with canonical cache/merge/RPC/coordinator modules for authenticated sync
+- PostgreSQL RLS and security-definer RPCs with revision and reset-generation safeguards
+- Realtime Postgres Changes as non-authoritative refresh acceleration
+- Node behavioral tests, Supabase SQL tests, and targeted browser proof
+
+## Completed Product Scope
+
+- 13-module curriculum, 250+ slides, quizzes, 61 flashcards, cram sheet, and 7/14-day study plans
+- FAA-like timed practice exam plus broad practice drill
+- Exact-slide resume, weak-area links, progress dashboard, and resumable exam sessions
+- Responsive/mobile and accessibility remediation foundations
+- PWA install metadata/icons, SEO metadata, sitemap/robots, and iOS safe-area styling
+- Email/password and Google sign-in
+- Local-first, user-isolated account progress sync with restore and reset
+
+## Remaining Meaningful Work
+
+Priority order is defined in `docs/superpowers/plans/2026-07-12-faa107-remaining-hardening-plan.md`:
+
+1. Upgrade Next.js and related dependencies against current advisories; add and verify security headers.
+2. Add content source/review-date governance and a repeatable freshness review.
+3. Split module metadata from full curriculum bodies and measure bundle improvements.
+4. Add deliberate offline caching/update behavior, then complete physical iPhone Safari/standalone/rotation and VoiceOver QA.
+5. Perform the deferred Realtime open-tab soak observation with known pre-reset listener data.
+6. Explore payment architecture only after explicit product approval; do not mix it into security or PWA hardening.
+
+## Decisions and Boundaries
+
+- Free platform today; monetization is unapproved future planning.
+- Browser/PWA remains the primary distribution path; no native rewrite is planned.
+- Apple Sign In is deferred.
+- Active in-progress exam state remains device-local unless a later approved design changes that boundary.
+- Regulatory-content changes require current FAA source verification and a recorded review date.

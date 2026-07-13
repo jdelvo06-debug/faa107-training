@@ -1,48 +1,71 @@
-# Supabase Auth configuration
+# Supabase Auth and account-progress configuration
 
-The application uses Supabase Auth with email/password and Google OAuth. Apple Sign In and progress synchronization are not part of this implementation.
+## Deployed status
+
+The production application at `https://faa107training.org` uses Supabase project `qbeioesktbpvdlgzrgsm` for:
+
+- email/password authentication;
+- Google OAuth;
+- signed-in learner progress synchronization and account-wide reset.
+
+Apple Sign In is deferred. Anonymous learners remain local-only and do not require a Supabase progress record. The account-progress migration `20260712000000_account_progress_sync.sql` is applied to the shared project.
 
 ## Application environment variables
 
-Set these two variables in `.env.local` for local development and in Vercel for Production, Preview, and Development as needed:
+Set these public variables in `.env.local` for local development and in the appropriate Vercel environments:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://qbeioesktbpvdlgzrgsm.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<Supabase anon key>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<Supabase publishable/anon key>
 ```
 
-Do not add a service-role key. `.env.local` is ignored by Git.
+Do not add a service-role key to browser or application configuration. Do not commit `.env.local`, provider secrets, test-account credentials, or copied dashboard values.
 
 ## Supabase Auth URL Configuration
 
-In Supabase Dashboard → Authentication → URL Configuration, add:
+In Supabase Dashboard → Authentication → URL Configuration:
 
 - Site URL: `https://faa107training.org`
-- Redirect URLs:
+- Allowed redirect URLs:
   - `https://faa107training.org/auth/callback`
   - `https://faa107-training.vercel.app/auth/callback`
   - `http://localhost:3000/auth/callback`
 
-If Vercel preview deployments must complete OAuth, also add the documented Vercel preview wildcard for this account, narrowed to the account slug:
+If Vercel preview deployments must complete OAuth, add the documented preview wildcard narrowed to the actual Vercel account/team slug:
 
 ```text
 https://*-<vercel-team-or-account-slug>.vercel.app/auth/callback
 ```
 
-Replace the placeholder with the actual Vercel team/account slug. Supabase recommends exact production redirect paths and permits wildcards for previews.
+Use exact production paths and replace the placeholder before saving. The custom domain is the canonical production origin; the Vercel hostname remains an allowed deployed callback.
 
-Both deployed origins returned HTTP 200 during the implementation check on 2026-07-12. The custom domain matches the application's current canonical metadata, so it is the Site URL; the Vercel hostname remains an allowed deployed callback.
+## Provider state
 
-## Google provider check
+### Google
 
-Google OAuth is already enabled in Supabase. Do not change or copy its client secret. Confirm only that Google Cloud's authorized redirect URI remains:
+Google OAuth is enabled. Do not change or copy its client secret during routine verification. Google Cloud's authorized redirect URI should remain Supabase's provider callback:
 
 ```text
 https://qbeioesktbpvdlgzrgsm.supabase.co/auth/v1/callback
 ```
 
-The app-facing redirect is `/auth/callback`; the Google-facing redirect above is Supabase's provider callback. They are intentionally different.
+The app-facing `/auth/callback` route and Google-facing Supabase callback are intentionally different.
 
-## Email confirmation behavior
+### Email/password
 
-Signup passes the application callback URL as `emailRedirectTo`. If Confirm Email is enabled, the confirmation email must be allowed to return to `/auth/callback`. If email templates have been customized, ensure they use the redirect target supplied by the signup request rather than a stale localhost Site URL.
+Signup supplies the application callback as `emailRedirectTo`. When Confirm Email is enabled, confirmation mail must be allowed to return to `/auth/callback`. Customized email templates must honor the redirect supplied by the signup request rather than a stale localhost URL.
+
+### Apple
+
+Apple Sign In is not configured or promised by the current release. Treat it as a separately approved future provider, not an incomplete production requirement.
+
+## Progress synchronization boundary
+
+- Migration: `supabase/migrations/20260712000000_account_progress_sync.sql`
+- Signed-in data is owner-scoped with RLS and application RPCs; direct cross-user access is not part of the client contract.
+- Anonymous progress remains local-only.
+- Reset is account-wide for the signed-in user.
+- Realtime assists open-tab refresh but is not the correctness mechanism; revision/reset-generation RPC behavior and refetches are authoritative.
+- The final live Realtime propagation retest after `411a2b7` was inconclusive because the listener held no pre-reset record. It remains a soak observation, not a passed production check.
+
+No keys or secrets belong in this document.

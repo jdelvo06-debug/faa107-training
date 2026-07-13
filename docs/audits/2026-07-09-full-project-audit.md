@@ -1,5 +1,7 @@
 # FAA 107 Full Project Audit
 
+> **Historical status note (2026-07-12):** This report is a point-in-time audit captured on 2026-07-09. Preserve its findings as historical evidence; do not treat every finding or recommendation as current. Later releases remediated substantial portions, including PWA/SEO/iOS safe-area work (`5354045`), Supabase authentication (`b8b100d`/`9bc762e`), and account-backed progress sync through `411a2b7`. Current status and remaining priorities live in `README.md`, `SESSION.md`, and `docs/superpowers/plans/2026-07-12-faa107-remaining-hardening-plan.md`.
+
 Audit date: 2026-07-09
 Repository: `https://github.com/jdelvo06-debug/faa107-training`
 Local checkout: `/Users/jeremydelvaux/projects/FAA 107`
