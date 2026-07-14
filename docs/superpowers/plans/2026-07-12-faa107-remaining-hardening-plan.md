@@ -206,6 +206,14 @@ Execute Phases 1–5 in order. Phase 6 is optional and requires a separate produ
 
 ## Cross-Phase Release Discipline
 
+### Consolidated local-first release strategy
+
+For this remaining-hardening campaign, complete every approved phase as a **local commit** after its independent QA gate. Do not push to GitHub or deploy to Vercel between phases. Keep the remote production branch as the known baseline while the local branch accumulates reviewed commits.
+
+At the end of the campaign, Jeremy decides whether to release the full train. Only then: run a final combined regression/security/browser gate, inspect every local commit and untracked file, push once, verify the single production deployment, and smoke the live site. This strategy intentionally trades intermediate off-Mac backup/deployment for less release churn; local commits remain the rollback checkpoints.
+
+The already-applied Supabase progress migration is a known exception: it remains live while the next local-only code phases are prepared. Do not assume the older deployed application contains later local changes.
+
 For every implementation phase:
 
 1. Start from the current remote production branch and inspect the dirty worktree.
