@@ -1,6 +1,6 @@
 # FAA 107 Remaining Hardening Implementation Plan
 
-> **For Hermes:** Use subagent-driven development or a single approved builder lane to execute one phase at a time. Re-read current package versions and production configuration before implementation; this plan records priorities, not frozen dependency numbers.
+> **Builder workflow:** Jeremy runs implementation phases in the **Codex App** from the phase-specific prompt or this plan. Cortana acts as controller: scope the phase, independently verify Codex’s SITREP against the local tree, run QA/browser checks, maintain documentation, and manage the consolidated local release train. Re-read current package versions and production configuration before implementation; this plan records priorities, not frozen dependency numbers.
 
 **Goal:** Harden the deployed FAA 107 platform without reopening completed remediation or conflating observations, required work, and optional product expansion.
 
