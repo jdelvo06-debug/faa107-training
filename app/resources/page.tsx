@@ -2,12 +2,13 @@ import { BookOpen, ExternalLink, FileText } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { OFFICIAL_REGULATORY_SOURCES } from "@/lib/regulatory-sources";
 import styles from "@/components/modern-flight-school.module.css";
 
 const resources = [
   {
     label: "FAA Remote Pilot Certification",
-    href: "https://www.faa.gov/uas/commercial_operators/become_a_drone_pilot",
+    href: OFFICIAL_REGULATORY_SOURCES.remotePilotCertification.url,
     description: "Eligibility, FTN, test scheduling, IACRA, recurrent training, and official process guidance."
   },
   {
@@ -17,8 +18,18 @@ const resources = [
   },
   {
     label: "FAA Operations Over People",
-    href: "https://www.faa.gov/uas/commercial_operators/operations_over_people",
+    href: OFFICIAL_REGULATORY_SOURCES.operationsOverPeople.url,
     description: "Night operations, operations over people, moving vehicles, and recurrent knowledge updates."
+  },
+  {
+    label: "Current Part 107 Operating Limitations",
+    href: OFFICIAL_REGULATORY_SOURCES.operatingLimitations.url,
+    description: "Current eCFR rule text for standard speed, altitude, visibility, and cloud-clearance limits."
+  },
+  {
+    label: "FAA Small UAS Airman Certification Standards",
+    href: OFFICIAL_REGULATORY_SOURCES.uasAcs.url,
+    description: "The current FAA-listed ACS edition and official topic weighting ranges for the UAG knowledge test."
   },
   {
     label: "FAA Part 107 Waivers",

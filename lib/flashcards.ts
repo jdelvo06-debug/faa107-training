@@ -1,5 +1,11 @@
 import type { Flashcard } from "@/lib/types";
 import { ACS_TOPIC_WEIGHTS } from "@/lib/acs-weights";
+import {
+  ALCOHOL_DRUG_SUMMARY,
+  GOVERNED_FACTS,
+  STANDARD_ALTITUDE_LIMIT_SUMMARY,
+  STANDARD_SPEED_LIMIT_SUMMARY,
+} from "@/lib/regulatory-sources";
 
 export const flashcards: Flashcard[] = [
   {
@@ -49,14 +55,14 @@ export const flashcards: Flashcard[] = [
     moduleId: "2",
     topic: "Regulations",
     front: "Standard altitude limit",
-    back: "400 ft AGL, with structure-related allowances when applicable."
+    back: STANDARD_ALTITUDE_LIMIT_SUMMARY
   },
   {
     id: "fc-2-speed",
     moduleId: "2",
     topic: "Regulations",
     front: "Standard speed limit",
-    back: "100 mph groundspeed."
+    back: STANDARD_SPEED_LIMIT_SUMMARY
   },
   {
     id: "fc-2-night",
@@ -97,8 +103,8 @@ export const flashcards: Flashcard[] = [
     id: "fc-3-surface-e",
     moduleId: "3",
     topic: "Airspace",
-    front: "Surface Class E",
-    back: "Class E that starts at the surface — shown with dashed magenta lines. Part 107 authorization required."
+    front: "Class E airport surface area (Class E2)",
+    back: `A Class E surface area designated for an airport requires FAA authorization under § 107.41. ${GOVERNED_FACTS.airspaceWeather.dashedMagentaGuidance}`
   },
   {
     id: "fc-3-classg",
@@ -126,7 +132,7 @@ export const flashcards: Flashcard[] = [
     moduleId: "4",
     topic: "Airspace",
     front: "Dashed magenta line",
-    back: "Surface Class E airspace boundary. Part 107 authorization is required."
+    back: GOVERNED_FACTS.airspaceWeather.dashedMagentaGuidance
   },
   {
     id: "fc-4-dashed-blue",
@@ -336,7 +342,7 @@ export const flashcards: Flashcard[] = [
     moduleId: "9",
     topic: "Operations",
     front: "Part 107 alcohol rule",
-    back: "No alcohol within 8 hours before flight. No operation while under the influence, while using a drug that affects faculties contrary to safety, or with an alcohol concentration of 0.04 or greater in blood or breath."
+    back: ALCOHOL_DRUG_SUMMARY
   },
   {
     id: "fc-9-empty-myopia",
@@ -406,7 +412,7 @@ export const flashcards: Flashcard[] = [
     moduleId: "11",
     topic: "Operations",
     front: "Part 107 passing score",
-    back: "70% — 42 correct answers out of 60 questions. Train to 85%+ on practice exams."
+    back: `70% — 42 correct answers out of ${GOVERNED_FACTS.acsWeighting.totalQuestions} questions. Train to 85%+ on practice exams.`
   },
   {
     id: "fc-11-three-pass",

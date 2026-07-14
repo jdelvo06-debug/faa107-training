@@ -11,14 +11,16 @@
 ### Step-by-Step Process
 1. Obtain an FAA Tracking Number (FTN) via IACRA profile
 2. Schedule the knowledge test at an FAA-approved Knowledge Testing Center
-3. Pass the UAG exam (60 questions, 120 minutes, 70% to pass = 42/60 min)
+3. Pass the UAG exam (60 questions, 120 minutes, 70% to pass = 42/60 correct)
 4. Complete FAA Form 8710-13 in IACRA
 5. TSA background check → temporary certificate
 6. Permanent certificate mailed
 
-### Recertification
-- Complete online recurrent training every 24 calendar months
-- Part 107 Small UAS Recurrent (ALC-677) — free, online
+### Aeronautical Knowledge Recency
+- The Remote Pilot Certificate itself does not expire; operating privileges require a qualifying recency event within the previous 24 calendar months
+- Passing the initial aeronautical knowledge test is a qualifying § 107.65 event
+- Part 107 Small UAS Recurrent (ALC-677) — free, online, and available to all Part 107 remote pilots
+- Part 107 Small UAS Recurrent — Part 61 Pilots (ALC-515) — for Part 107 pilots who hold a Part 61 pilot certificate other than a student pilot certificate and have a current flight review
 
 ### Test Topic Areas
 1. Applicable regulations (privileges, limitations, flight operation)
@@ -46,20 +48,20 @@
 
 ### Key FAA Resources (Official PDFs)
 - Airman Certification Standards (ACS) for UAS: https://www.faa.gov/sites/faa.gov/files/training_testing/testing/acs/uas_acs.pdf
-- Remote Pilot Study Guide: https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/remote_pilot_study_guide.pdf
+- Remote Pilot Study Guide: https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/remote_pilot_study_guide.pdf
 - Sample Questions and testing-supplement guidance: https://www.faa.gov/sites/faa.gov/files/training_testing/testing/test_questions/uag_questions.pdf
 
 ### Key Part 107 Operating Rules (from 14 CFR)
-- **Max altitude:** 400 ft AGL (or within 400 ft of structure)
+- **Max altitude:** 400 ft AGL; the structure allowance requires remaining within a 400-ft radius and no more than 400 ft above the structure's immediate uppermost limit
 - **Max speed:** 100 mph (87 knots)
 - **VLOS:** Must maintain visual line of sight
-- **Right of way:** Yield to all manned aircraft
+- **Right of way:** Yield to all aircraft, airborne vehicles, and launch and reentry vehicles
 - **Weather minima:** At least 3 statute miles visibility from the control station; at least 500 feet below and 2,000 feet horizontally from clouds (14 CFR § 107.51)
 - **Night ops:** Anti-collision lights required, visible 3 SM
 - **Alcohol/drugs:** Under §§ 107.27 and 91.17: no alcohol within 8 hours; no operation while under the influence; no safety-impairing drug use; and no alcohol concentration of 0.04 or greater in blood or breath
-- **Accident reporting:** Within 10 days if serious injury or $500+ property damage
+- **Safety event reporting:** Within 10 days after a qualifying serious injury or loss of consciousness, or damage to property other than the small unmanned aircraft when repair cost or fair-market value exceeds $500
 - **Registration:** All drones operated under Part 107 must be registered; the 0.55-pound exception applies only to limited recreational operations
-- **Airspace:** Class B/C/D/surface E require ATC authorization (LAANC)
+- **Airspace:** FAA authorization is required before Part 107 operations in Class B, C, or D airspace, or within the lateral boundaries of the Class E surface area designated for an airport (Class E2). A dashed magenta boundary can also depict a Class E extension area, so the symbol alone does not establish an authorization requirement; verify the applicable airspace and UAS Facility Map.
 - **Remote ID:** Required for most operations
 
 ### Current Official Rule Sources
@@ -68,3 +70,5 @@
 - Alcohol/drug prohibitions: https://www.ecfr.gov/current/title-14/part-91/section-91.17
 - Registration requirements: https://www.faa.gov/faq/do-i-need-register-my-drone-and-if-so-how-do-i-register
 - Operations over people: https://www.faa.gov/uas/commercial_operators/operations_over_people
+- Aeronautical knowledge recency: https://www.ecfr.gov/current/title-14/part-107/section-107.65
+- Remote pilot certification and recurrent training: https://www.faa.gov/uas/commercial_operators/become_a_drone_pilot

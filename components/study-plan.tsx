@@ -5,6 +5,7 @@ import Link from "next/link";
 import { moduleHref } from "@/lib/learning-routes";
 import { useProgress } from "@/lib/progress-storage";
 import { findRecommendedDay } from "@/lib/progress-selectors";
+import { GOVERNED_FACTS } from "@/lib/regulatory-sources";
 import { cn } from "@/lib/utils";
 import styles from "./modern-flight-school.module.css";
 
@@ -29,15 +30,15 @@ const sevenDayPlan = [
     day: 1,
     title: "Rules & Regulations",
     modules: [1, 2],
-    focus: "Part 107 operating limits, registration, night ops, over people, accident reporting, Remote ID, waivers.",
-    tip: "These are the most-tested topics. Memorize the numbers: 400 ft, 100 mph, 55 lbs, 8 hours, 10 days.",
+    focus: "Part 107 operating limits, registration, night ops, over people, safety event reporting, Remote ID, waivers.",
+    tip: `These are the most-tested topics. Memorize the numbers: ${GOVERNED_FACTS.operatingLimitations.standardMaxAltitudeAglFeet} ft, ${GOVERNED_FACTS.operatingLimitations.maxGroundspeedMph} mph, less than ${GOVERNED_FACTS.operatingLimitations.smallUasWeightLimitPoundsExclusive} lbs on takeoff, ${GOVERNED_FACTS.alcoholDrugRestrictions.lookbackHours} hours, ${GOVERNED_FACTS.operatingLimitations.safetyEventReportDays} days.`,
   },
   {
     day: 2,
     title: "Airspace Deep Dive",
     modules: [3],
     focus: "Classes B through G, special use airspace, TFRs, NOTAMs, airspace authorization via LAANC.",
-    tip: "Draw the airspace pyramid from memory. Keep Part 107's 3 SM visibility and cloud-clearance baseline separate from manned-aircraft VFR minima.",
+    tip: `Draw the airspace pyramid from memory. Keep Part 107's ${GOVERNED_FACTS.airspaceWeather.minimumVisibilitySm} SM visibility and ${GOVERNED_FACTS.airspaceWeather.cloudClearanceBelowFeet}-ft-below/${GOVERNED_FACTS.airspaceWeather.cloudClearanceHorizontalFeet.toLocaleString("en-US")}-ft-horizontal cloud-clearance baseline separate from manned-aircraft VFR minima.`,
   },
   {
     day: 3,
@@ -72,13 +73,13 @@ const sevenDayPlan = [
     title: "Review & Cram",
     modules: [12, 13],
     focus: "Review cram sheet, retake practice exam, drill weak areas, review flagged questions.",
-    tip: "Get a full night's sleep. The test is 2 hours — you've got this.",
+    tip: `Get a full night's sleep. The test is ${GOVERNED_FACTS.acsWeighting.testingTimeMinutes / 60} hours — you've got this.`,
   },
 ];
 
 const fourteenDayPlan = [
   { day: 1, title: "Welcome & Regulations", modules: [1, 2], focus: "Course overview, Part 107 operating limits, registration, Remote ID." },
-  { day: 2, title: "Regulations (continued)", modules: [2], focus: "Night ops, op over people, waivers, LAANC, accident reporting. Quiz module 2." },
+  { day: 2, title: "Regulations (continued)", modules: [2], focus: "Night ops, op over people, waivers, LAANC, safety event reporting. Quiz module 2." },
   { day: 3, title: "Airspace Classes", modules: [3], focus: "Class B, C, D — characteristics, chart depiction, authorization requirements." },
   { day: 4, title: "Airspace (continued)", modules: [3], focus: "Class E, G, special use (MOA, Restricted, Prohibited), TFRs, NOTAMs. Quiz module 3." },
   { day: 5, title: "Charts — Basics", modules: [4], focus: "Lat/long, chart legend, airport symbols, airspace boundaries on charts." },
@@ -253,7 +254,7 @@ export function StudyPlan() {
           <li>• Open a <span className="font-semibold text-foreground">live sectional chart</span> (SkyVector.com) while studying Module 4.</li>
           <li>• The official FAA study guide is free — use it as backup reference.</li>
           <li>• Sleep matters. Your brain consolidates what you studied during sleep.</li>
-          <li>• The test is 60 questions in 120 minutes — that&apos;s 2 minutes per question. Don&apos;t rush.</li>
+          <li>• The test is {GOVERNED_FACTS.acsWeighting.totalQuestions} questions in {GOVERNED_FACTS.acsWeighting.testingTimeMinutes} minutes — that&apos;s {GOVERNED_FACTS.acsWeighting.testingTimeMinutes / GOVERNED_FACTS.acsWeighting.totalQuestions} minutes per question. Don&apos;t rush.</li>
         </ul>
       </section>
     </div>

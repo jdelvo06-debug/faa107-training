@@ -1,12 +1,31 @@
+import {
+  GOVERNED_FACTS,
+  OFFICIAL_REGULATORY_SOURCES,
+} from "@/lib/regulatory-sources";
+
+export const ACS_TOPIC_WEIGHT_RANGES = GOVERNED_FACTS.acsWeighting.ranges;
+
+function formatRange(range: { minPercent: number; maxPercent: number }) {
+  return `${range.minPercent}–${range.maxPercent}%`;
+}
+
 export const ACS_TOPIC_WEIGHTS = {
-  regulations: "15–25%",
-  airspace: "15–25%",
-  weather: "11–16%",
-  loadingPerformance: "7–11%",
-  operations: "35–45%",
+  regulations: formatRange(ACS_TOPIC_WEIGHT_RANGES.regulations),
+  airspace: formatRange(ACS_TOPIC_WEIGHT_RANGES.airspace),
+  weather: formatRange(ACS_TOPIC_WEIGHT_RANGES.weather),
+  loadingPerformance: formatRange(ACS_TOPIC_WEIGHT_RANGES.loadingPerformance),
+  operations: formatRange(ACS_TOPIC_WEIGHT_RANGES.operations),
 } as const;
 
+export function describeAcsRanges(weights: {
+  regulations: string;
+  airspace: string;
+  operations: string;
+}) {
+  return `Operations has the largest current ACS range at ${weights.operations}. Regulations are ${weights.regulations} and Airspace & Requirements are ${weights.airspace}.`;
+}
+
 export const FAA_UAS_ACS_SOURCE = {
-  label: "FAA: Remote Pilot — Small UAS Airman Certification Standards",
-  href: "https://www.faa.gov/sites/faa.gov/files/training_testing/testing/acs/uas_acs.pdf",
+  label: OFFICIAL_REGULATORY_SOURCES.uasAcs.title,
+  href: OFFICIAL_REGULATORY_SOURCES.uasAcs.url,
 } as const;

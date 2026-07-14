@@ -1,5 +1,13 @@
 import type { Module } from "@/lib/types";
 import { ACS_TOPIC_WEIGHTS, FAA_UAS_ACS_SOURCE } from "@/lib/acs-weights";
+import {
+  GOVERNED_FACTS,
+  NON_CEILING_CLOUD_CLEARANCE_REMINDER,
+  OPERATIONS_OVER_PEOPLE_SUMMARIES,
+  SAFETY_EVENT_REPORTING_SUMMARY,
+  SMALL_UAS_WEIGHT_SUMMARY,
+  describeCloudCeilingLimit,
+} from "@/lib/regulatory-sources";
 
 const faaPilotSource = {
   label: "FAA: Become a Certificated Remote Pilot",
@@ -104,7 +112,7 @@ const moduleBlueprints = [
           {
             type: "bullets",
             items: [
-              "Small UAS means an unmanned aircraft weighing less than 55 pounds.",
+              `Small UAS means an unmanned aircraft that is ${SMALL_UAS_WEIGHT_SUMMARY.toLowerCase()}.`,
               "Part 107 covers work, business, public safety, education, and many other non-recreational operations.",
               "Recreational flying has a separate rule path, but Part 107 is the professional credential."
             ]
@@ -170,8 +178,8 @@ const moduleBlueprints = [
             headers: ["Exam item", "Value"],
             rows: [
               ["Test code", "UAG - Unmanned Aircraft General - Small"],
-              ["Questions", "60 multiple-choice questions"],
-              ["Time", "120 minutes"],
+              ["Questions", `${GOVERNED_FACTS.acsWeighting.totalQuestions} multiple-choice questions`],
+              ["Time", `${GOVERNED_FACTS.acsWeighting.testingTimeMinutes} minutes`],
               ["Passing score", "70 percent"],
               ["Minimum correct", "42 of 60"]
             ]
@@ -220,7 +228,7 @@ const moduleBlueprints = [
             headers: ["Term", "Plain-language meaning"],
             rows: [
               ["Remote PIC", "The remote pilot in command responsible for the operation."],
-              ["Small UAS", "Unmanned aircraft system under 55 pounds."],
+              ["Small UAS", SMALL_UAS_WEIGHT_SUMMARY],
               ["VLOS", "Visual line of sight with unaided vision except corrective lenses."],
               ["LAANC", "The FAA system used for near real-time controlled airspace authorizations."],
               ["AGL", "Altitude above ground level."],
@@ -272,7 +280,7 @@ const moduleBlueprints = [
           {
             type: "bullets",
             items: [
-              "Small UAS must weigh less than 55 pounds.",
+              `Small UAS must be ${SMALL_UAS_WEIGHT_SUMMARY.toLowerCase()}.`,
               "The remote pilot certificate must be available during operations.",
               "The remote pilot is responsible for the safety of the operation.",
               "Operations outside normal limitations require a waiver or authorization where applicable."
@@ -293,7 +301,7 @@ const moduleBlueprints = [
               "All drones operated under Part 107 must be registered, regardless of weight.",
               "The 0.55-pound threshold is a limited exception for recreational operations, not Part 107.",
               "Part 107 registration is tied to each aircraft, not one number for every drone.",
-              "Registration is valid for three years."
+              `Registration is valid for ${GOVERNED_FACTS.registration.validityYears} years.`
             ]
           },
           {
@@ -318,11 +326,11 @@ const moduleBlueprints = [
             type: "table",
             headers: ["Limit", "Part 107 baseline"],
             rows: [
-              ["Altitude", "400 ft AGL, or within 400 ft of a structure when allowed."],
-              ["Speed", "100 mph groundspeed."],
-              ["Visibility", "At least 3 statute miles from the control station."],
-              ["Cloud clearance", "500 ft below clouds and 2,000 ft horizontally."],
-              ["Aircraft weight", "Less than 55 pounds."]
+              ["Altitude", `${GOVERNED_FACTS.operatingLimitations.standardMaxAltitudeAglFeet} ft AGL, or within ${GOVERNED_FACTS.operatingLimitations.structureRadiusFeet} ft of a structure and no more than ${GOVERNED_FACTS.operatingLimitations.maxHeightAboveStructureFeet} ft above its uppermost limit.`],
+              ["Speed", `${GOVERNED_FACTS.operatingLimitations.maxGroundspeedMph} mph (${GOVERNED_FACTS.operatingLimitations.maxGroundspeedKnots} knots) groundspeed.`],
+              ["Visibility", `At least ${GOVERNED_FACTS.airspaceWeather.minimumVisibilitySm} statute miles from the control station.`],
+              ["Cloud clearance", `${GOVERNED_FACTS.airspaceWeather.cloudClearanceBelowFeet} ft below clouds and ${GOVERNED_FACTS.airspaceWeather.cloudClearanceHorizontalFeet.toLocaleString("en-US")} ft horizontally.`],
+              ["Aircraft weight", `${SMALL_UAS_WEIGHT_SUMMARY}.`]
             ]
           },
           {
@@ -358,12 +366,12 @@ const moduleBlueprints = [
       {
         id: "m2-5",
         kicker: "Right of Way",
-        title: "Manned Aircraft Come First",
+        title: "Other Aircraft and Vehicles Come First",
         blocks: [
           {
             type: "bullets",
             items: [
-              "Small UAS must yield right of way to all aircraft, airborne vehicles, and launch/reentry vehicles.",
+              `Small UAS must ${GOVERNED_FACTS.operatingLimitations.rightOfWaySummary.toLowerCase()}.`,
               "Never create a collision hazard.",
               "Avoid airport environments unless you understand the airspace and authorization requirements.",
               "If safety is uncertain, terminate or delay the flight."
@@ -381,8 +389,8 @@ const moduleBlueprints = [
             type: "table",
             headers: ["Rule area", "Operational takeaway"],
             rows: [
-              ["Alcohol", "Do not operate within 8 hours after consuming alcohol."],
-              ["Alcohol concentration", "Do not operate with an alcohol concentration of 0.04 or greater in blood or breath."],
+              ["Alcohol", `Do not operate within ${GOVERNED_FACTS.alcoholDrugRestrictions.lookbackHours} hours after consuming alcohol.`],
+              ["Alcohol concentration", `Do not operate with an alcohol concentration of ${GOVERNED_FACTS.alcoholDrugRestrictions.prohibitedConcentrationAtOrAbove} or greater in blood or breath.`],
               ["Impairment", "Do not operate while under the influence of alcohol or while using any drug that affects faculties contrary to safety."],
               ["Medical fitness", "Do not fly when your physical or mental condition makes the operation unsafe."],
               ["Crew judgment", "Use IMSAFE-style self-checks before acting as remote PIC."]
@@ -416,12 +424,10 @@ const moduleBlueprints = [
           {
             type: "table",
             headers: ["Category", "High-level idea"],
-            rows: [
-              ["Category 1", "0.55 lb or less including attachments; no exposed rotating parts that would lacerate skin. Sustained flight over open-air assemblies requires Remote ID compliance."],
-              ["Category 2", "Performance-qualified aircraft on an FAA-accepted declaration of compliance, with a Category 2 label and operating instructions. Sustained flight over open-air assemblies requires Remote ID compliance."],
-              ["Category 3", "Performance-qualified aircraft on an FAA-accepted declaration of compliance, with a Category 3 label and operating instructions. No operations over open-air assemblies; additional site or sustained-flight limits apply."],
-              ["Category 4", "Aircraft with a Part 21 airworthiness certificate, operated and maintained under approved limitations. Sustained flight over open-air assemblies requires Remote ID compliance."]
-            ]
+            rows: OPERATIONS_OVER_PEOPLE_SUMMARIES.map(({ category, rule }) => [
+              category,
+              rule,
+            ])
           },
           {
             type: "callout",
@@ -434,21 +440,21 @@ const moduleBlueprints = [
       {
         id: "m2-9",
         kicker: "Reporting",
-        title: "Accident Reporting",
+        title: "Safety Event Reporting",
         blocks: [
           {
             type: "bullets",
             items: [
-              "Report qualifying accidents to the FAA within 10 days.",
-              "A qualifying event includes serious injury.",
-              "A qualifying event also includes property damage above the FAA reporting threshold.",
+              `Report qualifying safety events to the FAA within ${GOVERNED_FACTS.operatingLimitations.safetyEventReportDays} days.`,
+              "A qualifying event includes serious injury or loss of consciousness.",
+              `Property damage qualifies only when it is to property other than the small unmanned aircraft and repair cost or fair-market value exceeds $${GOVERNED_FACTS.operatingLimitations.propertyDamageThresholdExclusiveDollars}.`,
               "Good operational records make reporting faster and more accurate."
             ]
           },
           {
             type: "callout",
             title: "Study note",
-            text: "The common Part 107 study threshold is serious injury or property damage of at least $500, excluding damage to the small UAS."
+            text: SAFETY_EVENT_REPORTING_SUMMARY
           }
         ]
       },
@@ -486,7 +492,7 @@ const moduleBlueprints = [
           {
             type: "bullets",
             items: [
-              "Class B, C, D, and surface Class E controlled airspace require authorization for Part 107 operations.",
+              GOVERNED_FACTS.airspaceWeather.authorizationSummary,
               "LAANC can provide near real-time authorization in participating areas.",
               "Authorization is not the same thing as a waiver.",
               "Night operations in controlled airspace still need airspace authorization."
@@ -546,7 +552,7 @@ const moduleBlueprints = [
           {
             type: "callout",
             title: "Test tip",
-            text: "The FAA exam frequently asks which airspace classes require authorization. The answer is always B, C, D, and surface Class E."
+            text: GOVERNED_FACTS.airspaceWeather.authorizationSummary
           }
         ],
         sources: [faaAirspaceSource]
@@ -566,8 +572,8 @@ const moduleBlueprints = [
             rows: [
               ["Shape", "Upside-down wedding cake — multiple layered shelves"],
               ["Top altitude", "Typically 10,000 ft MSL"],
-              ["ATC clearance", "Required for ALL aircraft, including drones"],
-              ["Part 107 authorization", "Always required — LAANC or manual"],
+              ["Manned-aircraft entry", "ATC clearance required"],
+              ["Part 107 authorization", "Required — LAANC or manual FAA authorization"],
               ["Equipment", "Mode C transponder and two-way radio for manned aircraft"]
             ]
           },
@@ -640,12 +646,13 @@ const moduleBlueprints = [
         blocks: [
           {
             type: "paragraph",
-            text: "Class E is controlled airspace that is not Class A, B, C, or D. It exists in many configurations: surface-based extensions around airports, transition areas starting at 700 or 1,200 ft AGL, and en route airspace above 14,500 ft MSL."
+            text: "Class E is controlled airspace that is not Class A, B, C, or D. It exists in many configurations: airport surface areas, surface extension areas, transition areas starting at 700 or 1,200 ft AGL, and en route airspace above 14,500 ft MSL."
           },
           {
             type: "bullets",
             items: [
-              "Surface Class E: Dashed magenta lines on sectional charts. Authorization required for Part 107.",
+              "Class E at the surface: Dashed magenta boundaries can depict an airport surface area (Class E2) or an extension area.",
+              GOVERNED_FACTS.airspaceWeather.authorizationSummary,
               "700 ft AGL Class E: Shaded magenta vignette. Most drone ops below this are unaffected.",
               "1,200 ft AGL Class E: Starts at 1,200 AGL in most of the country. Below 400 ft, you're clear.",
               "En route Class E: Above 14,500 ft MSL. Not relevant for small UAS."
@@ -654,7 +661,7 @@ const moduleBlueprints = [
           {
             type: "callout",
             title: "Exam nuance",
-            text: "Only SURFACE Class E requires Part 107 authorization. Class E starting at 700 ft or higher does not — you fly below it at 400 ft AGL."
+            text: GOVERNED_FACTS.airspaceWeather.dashedMagentaGuidance
           }
         ],
         sources: [faaAirspaceSource, faaSuasSource]
@@ -871,13 +878,13 @@ const moduleBlueprints = [
         blocks: [
           {
             type: "paragraph",
-            text: "Airspace boundaries on sectionals use specific colors and line styles. Drone pilots must recognize these boundaries because Class B, C, D, and surface Class E require authorization."
+            text: GOVERNED_FACTS.airspaceWeather.authorizationSummary
           },
           {
             type: "image",
             src: "/images/charts/airspace-boundaries.png",
             alt: "FAA sectional chart airspace boundary depictions showing Class B, C, D, and E boundaries",
-            caption: "FAA Chart Users' Guide — airspace boundary depictions. Solid blue = Class B, solid magenta = Class C, dashed blue = Class D, dashed magenta = surface Class E."
+            caption: "FAA Chart Users' Guide — airspace boundary depictions. Solid blue = Class B, solid magenta = Class C, dashed blue = Class D, dashed magenta = Class E at the surface (airport surface area or extension)."
           },
           {
             type: "table",
@@ -886,7 +893,7 @@ const moduleBlueprints = [
               ["Solid blue line", "Class B boundary"],
               ["Solid magenta line", "Class C boundary"],
               ["Dashed blue line", "Class D surface boundary"],
-              ["Dashed magenta line", "Class E surface boundary"],
+              ["Dashed magenta line", "Class E surface boundary — airport surface area or extension"],
               ["Fuzzy magenta shading", "Class E begins at 700 ft AGL"],
               ["Fuzzy blue shading", "Class E begins at 1,200 ft AGL"]
             ]
@@ -894,7 +901,7 @@ const moduleBlueprints = [
           {
             type: "callout",
             title: "Authorization clue",
-            text: "Dashed magenta is the big trap: it is surface Class E, so Part 107 authorization is required."
+            text: GOVERNED_FACTS.airspaceWeather.dashedMagentaGuidance
           }
         ],
         sources: [faaSuasSource, faaAirspaceSource]
@@ -1153,7 +1160,7 @@ const moduleBlueprints = [
           {
             type: "callout",
             title: "Drone pilot rule",
-            text: "You can operate near a non-towered airport without authorization IF you are in Class G. But you still must yield right of way to all manned aircraft."
+            text: `You can operate near a non-towered airport without authorization if you are in Class G. But you still must ${GOVERNED_FACTS.operatingLimitations.rightOfWaySummary.toLowerCase()}.`
           }
         ],
         sources: [faaAirspaceSource, faaSuasSource]
@@ -1559,8 +1566,8 @@ const moduleBlueprints = [
             type: "table",
             headers: ["Coverage code", "Coverage amount", "Part 107 meaning"],
             rows: [
-              ["FEW", "1-2 oktas — few clouds", "No ceiling — no restriction on altitude"],
-              ["SCT", "3-4 oktas — scattered", "No ceiling — but cloud clearance still applies"],
+              ["FEW", "1-2 oktas — few clouds", NON_CEILING_CLOUD_CLEARANCE_REMINDER],
+              ["SCT", "3-4 oktas — scattered", NON_CEILING_CLOUD_CLEARANCE_REMINDER],
               ["BKN", "5-7 oktas — broken", "THIS IS A CEILING. Stay 500 ft below."],
               ["OVC", "8 oktas — overcast", "Ceiling. Stay 500 ft below."]
             ]
@@ -1569,7 +1576,7 @@ const moduleBlueprints = [
             type: "bullets",
             items: [
               "Part 107 cloud clearance: 500 ft below clouds, 2,000 ft horizontally from clouds.",
-              "A ceiling at 800 ft AGL means your 400 ft max altitude is fine — but barely.",
+              describeCloudCeilingLimit(800),
               "Cloud types (cumulus, stratus, cirrus) tell you about stability, turbulence, and future weather.",
               "Towering cumulus = developing thunderstorms. Do not fly near them."
             ]
@@ -2764,13 +2771,13 @@ const moduleBlueprints = [
         blocks: [
           {
             type: "paragraph",
-            text: "The FAA Unmanned Aircraft General - Small (UAG) knowledge test is 60 multiple-choice questions with a 120-minute time limit. You need 70% (42 correct) to pass. The test is taken at an FAA-approved testing center and costs approximately $175."
+            text: `The FAA Unmanned Aircraft General - Small (UAG) knowledge test is ${GOVERNED_FACTS.acsWeighting.totalQuestions} multiple-choice questions with a ${GOVERNED_FACTS.acsWeighting.testingTimeMinutes}-minute time limit. You need 70% (42 correct) to pass. The test is taken at an FAA-approved testing center and costs approximately $175.`
           },
           {
             type: "table",
             headers: ["Exam fact", "What it means for you"],
             rows: [
-              ["60 questions, 120 minutes", "You have 2 minutes per question. That is plenty if you are prepared."],
+              [`${GOVERNED_FACTS.acsWeighting.totalQuestions} questions, ${GOVERNED_FACTS.acsWeighting.testingTimeMinutes} minutes`, `You have ${GOVERNED_FACTS.acsWeighting.testingTimeMinutes / GOVERNED_FACTS.acsWeighting.totalQuestions} minutes per question. That is plenty if you are prepared.`],
               ["70% passing score", "You can miss 18 questions and still pass. But train to 85%+."],
               ["Single subject areas tested", "Airspace, weather, regulations, operations, loading/performance"],
               ["FAA testing supplement", "The proctor provides the supplement book used for figure questions; UAG figure references use FAA-CT-8080-2H graphics. Personal written or electronic materials are not allowed, and the proctor makes the final determination on test aids."],
@@ -2960,7 +2967,7 @@ const moduleBlueprints = [
               "You can decode a METAR and TAF without looking up abbreviations.",
               "You can identify airspace classes, boundaries, and authorization requirements from a sectional chart excerpt.",
               "You know the five hazardous attitudes and their antidotes.",
-              "You know the Part 107 operating limits: 400 ft AGL, 100 mph, 3 SM visibility, 55 lb weight, 8-hour alcohol rule.",
+              `You know the Part 107 operating limits: ${GOVERNED_FACTS.operatingLimitations.standardMaxAltitudeAglFeet} ft AGL, ${GOVERNED_FACTS.operatingLimitations.maxGroundspeedMph} mph, ${GOVERNED_FACTS.airspaceWeather.minimumVisibilitySm} SM visibility, less than ${GOVERNED_FACTS.operatingLimitations.smallUasWeightLimitPoundsExclusive} lb on takeoff, and the ${GOVERNED_FACTS.alcoholDrugRestrictions.lookbackHours}-hour alcohol rule.`,
               "You feel calm about the test — not because it is easy, but because you are prepared."
             ]
           },

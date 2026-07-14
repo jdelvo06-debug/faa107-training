@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const ts = require("typescript");
 
 const root = path.resolve(__dirname, "..");
 const read = (relativePath) =>
@@ -43,6 +44,51 @@ function collectLearnerFiles(relativeDirectory) {
 const learnerFiles = learnerContentRoots.flatMap(collectLearnerFiles).sort();
 
 const learnerContent = learnerFiles.map(read).join("\n");
+const moduleCache = new Map();
+
+function loadTypeScriptModule(relativePath) {
+  const withExtension = relativePath.endsWith(".ts")
+    ? relativePath
+    : `${relativePath}.ts`;
+  const absolutePath = path.join(root, withExtension);
+  if (moduleCache.has(absolutePath)) {
+    return moduleCache.get(absolutePath).exports;
+  }
+
+  const source = fs.readFileSync(absolutePath, "utf8");
+  const output = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
+    },
+    fileName: absolutePath,
+  }).outputText;
+  const loaded = { exports: {} };
+  moduleCache.set(absolutePath, loaded);
+  const localRequire = (specifier) => {
+    if (specifier.startsWith("@/")) {
+      return loadTypeScriptModule(specifier.slice(2));
+    }
+    return require(specifier);
+  };
+
+  new Function(
+    "exports",
+    "require",
+    "module",
+    "__filename",
+    "__dirname",
+    output,
+  )(
+    loaded.exports,
+    localRequire,
+    loaded,
+    absolutePath,
+    path.dirname(absolutePath),
+  );
+  return loaded.exports;
+}
 
 test("public course and research content contains no owner-specific career data", () => {
   const personalDataPatterns = [
@@ -81,21 +127,25 @@ test("Part 107 weather guidance does not substitute manned Class G minima", () =
   );
   assert.doesNotMatch(learnerContent, /Know Class G visibility minimums cold/i);
 
-  for (const file of ["lib/course-data.ts", "app/cram-sheet/page.tsx"]) {
-    const content = read(file);
-    assert.match(content, /3 statute miles|3 SM/i);
-    assert.match(content, /500 (?:ft|feet) below/i);
-    assert.match(content, /2,000 (?:ft|feet) horizontal/i);
-    assert.match(content, /107\.51/);
-  }
+  const { CRAM_WEATHER_MINIMUMS } = loadTypeScriptModule(
+    "lib/cram-sheet-data",
+  );
+  assert.deepEqual(CRAM_WEATHER_MINIMUMS, [
+    {
+      id: "visibility",
+      label: "Part 107 minimum visibility",
+      value: "3 SM from the control station",
+    },
+    {
+      id: "cloud-clearance",
+      label: "Part 107 cloud distance",
+      value: "At least 500 ft below and 2,000 ft horizontally",
+    },
+  ]);
 });
 
 test("Part 107 registration is not limited by the recreational 0.55-pound threshold", () => {
-  for (const file of [
-    "lib/course-data.ts",
-    "app/cram-sheet/page.tsx",
-    "research/regulations.md",
-  ]) {
+  for (const file of ["lib/course-data.ts", "research/regulations.md"]) {
     const content = read(file);
     assert.doesNotMatch(
       content,
@@ -103,39 +153,41 @@ test("Part 107 registration is not limited by the recreational 0.55-pound thresh
     );
     assert.match(content, /all drones? operated under (?:14 CFR )?Part 107.*register/i);
   }
+
+  const { CRAM_OPERATING_LIMITS } = loadTypeScriptModule(
+    "lib/cram-sheet-data",
+  );
+  assert.equal(
+    CRAM_OPERATING_LIMITS.find((item) => item.id === "registration").value,
+    "All drones operated under Part 107 must be registered",
+  );
 });
 
 test("all alcohol learner surfaces retain the independent 0.04 prohibition", () => {
-  for (const file of [
-    "lib/course-data.ts",
-    "lib/questions.ts",
-    "lib/flashcards.ts",
-  ]) {
-    const content = read(file);
-    assert.match(content, /0\.04/);
-    assert.doesNotMatch(content, /BAC (?:number )?does not matter/i);
-  }
+  assert.match(read("lib/course-data.ts"), /0\.04/);
+  const { ALCOHOL_DRUG_SUMMARY } = loadTypeScriptModule(
+    "lib/regulatory-sources",
+  );
+  const { moduleQuestions } = loadTypeScriptModule("lib/questions");
+  const { flashcards } = loadTypeScriptModule("lib/flashcards");
+  const question = moduleQuestions.find((item) => item.id === "m9-q1");
+  const card = flashcards.find((item) => item.id === "fc-9-alcohol-8hr");
+
+  assert.match(ALCOHOL_DRUG_SUMMARY, /0\.04/);
+  assert.equal(question.choices[question.correctIndex], ALCOHOL_DRUG_SUMMARY);
+  assert.equal(card.back, ALCOHOL_DRUG_SUMMARY);
+  assert.doesNotMatch(learnerContent, /BAC (?:number )?does not matter/i);
 });
 
 test("ACS weights have one shared source and no obsolete learner-facing ranges", () => {
-  const sharedPath = path.join(root, "lib/acs-weights.ts");
-  assert.equal(fs.existsSync(sharedPath), true, "missing shared ACS weights source");
-
-  const shared = read("lib/acs-weights.ts");
-  assert.match(shared, /regulations:\s*"15–25%"/);
-  assert.match(shared, /airspace:\s*"15–25%"/);
-  assert.match(shared, /weather:\s*"11–16%"/);
-  assert.match(shared, /loadingPerformance:\s*"7–11%"/);
-  assert.match(shared, /operations:\s*"35–45%"/);
-
-  for (const file of [
-    "lib/course-data.ts",
-    "lib/questions.ts",
-    "lib/flashcards.ts",
-    "app/cram-sheet/page.tsx",
-  ]) {
-    assert.match(read(file), /@\/lib\/acs-weights/);
-  }
+  const { ACS_TOPIC_WEIGHTS } = loadTypeScriptModule("lib/acs-weights");
+  assert.deepEqual(ACS_TOPIC_WEIGHTS, {
+    regulations: "15–25%",
+    airspace: "15–25%",
+    weather: "11–16%",
+    loadingPerformance: "7–11%",
+    operations: "35–45%",
+  });
 
   const weightedSurfaces = [
     "lib/course-data.ts",
@@ -156,20 +208,32 @@ test("exam reference guidance acknowledges the FAA testing supplement", () => {
   assert.match(course, /testing supplement/i);
 });
 
-test("operations-over-people cram guidance preserves category distinctions", () => {
-  const cram = read("app/cram-sheet/page.tsx");
+test("research links the live official FAA remote-pilot study guide", () => {
+  const research = read("research/regulations.md");
   assert.doesNotMatch(
-    cram,
-    /Categories 1-4 \(no exposed rotating parts for sustained flight over open-air\)/i,
+    research,
+    /faa\.gov\/regulations_policies\/handbooks_manuals\/aviation\/remote_pilot_study_guide\.pdf/,
   );
-  for (const category of ["Category 1", "Category 2", "Category 3", "Category 4"]) {
-    assert.match(cram, new RegExp(category));
-  }
-  assert.match(cram, /declaration/i);
-  assert.match(cram, /label/i);
-  assert.match(cram, /Remote ID/i);
-  assert.match(cram, /Category 3[^\n]{0,500}25 foot-pounds/i);
-  assert.match(cram, /Category 3[^\n]{0,500}exposed rotating parts[^\n]{0,100}lacerat/i);
-  assert.match(cram, /Category 3[^\n]{0,500}(?:safety defects?[^\n]{0,100}undue hazard|undue hazard[^\n]{0,100}safety defects?)/i);
-  assert.match(cram, /Category 3[^\n]{0,200}(?:no open-air assemblies|not.*open-air assemblies)/i);
+  assert.match(
+    research,
+    /faa\.gov\/sites\/faa\.gov\/files\/regulations_policies\/handbooks_manuals\/aviation\/remote_pilot_study_guide\.pdf/,
+  );
+});
+
+test("operations-over-people cram guidance preserves category distinctions", () => {
+  const { CRAM_OPERATIONS_OVER_PEOPLE } = loadTypeScriptModule(
+    "lib/cram-sheet-data",
+  );
+  assert.deepEqual(
+    CRAM_OPERATIONS_OVER_PEOPLE.map((item) => item.category),
+    ["Category 1", "Category 2", "Category 3", "Category 4"],
+  );
+
+  const category3 = CRAM_OPERATIONS_OVER_PEOPLE.find(
+    (item) => item.id === "category-3",
+  ).rule;
+  assert.match(category3, /25 foot-pounds/i);
+  assert.match(category3, /lacerating rotating parts/i);
+  assert.match(category3, /safety defect/i);
+  assert.match(category3, /No open-air assemblies/i);
 });

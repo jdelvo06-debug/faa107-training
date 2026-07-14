@@ -1,5 +1,14 @@
 import type { QuizQuestion } from "@/lib/types";
-import { ACS_TOPIC_WEIGHTS } from "@/lib/acs-weights";
+import {
+  ACS_TOPIC_WEIGHTS,
+  describeAcsRanges,
+} from "@/lib/acs-weights";
+import {
+  ALCOHOL_DRUG_SUMMARY,
+  GOVERNED_FACTS,
+  SAFETY_EVENT_REPORTING_SUMMARY,
+  SMALL_UAS_WEIGHT_SUMMARY,
+} from "@/lib/regulatory-sources";
 
 export const moduleQuestions: QuizQuestion[] = [
   {
@@ -61,9 +70,9 @@ export const moduleQuestions: QuizQuestion[] = [
     moduleId: "2",
     topic: "Regulations",
     prompt: "What is the maximum small UAS weight under Part 107?",
-    choices: ["Under 25 pounds", "Under 55 pounds", "Under 75 pounds", "Under 100 pounds"],
+    choices: ["Under 25 pounds", SMALL_UAS_WEIGHT_SUMMARY, "Under 75 pounds", "Under 100 pounds"],
     correctIndex: 1,
-    explanation: "Part 107 small UAS operations are for unmanned aircraft weighing less than 55 pounds."
+    explanation: `A small unmanned aircraft is ${SMALL_UAS_WEIGHT_SUMMARY.toLowerCase()}.`
   },
   {
     id: "m2-q2",
@@ -87,10 +96,10 @@ export const moduleQuestions: QuizQuestion[] = [
     id: "m2-q4",
     moduleId: "2",
     topic: "Regulations",
-    prompt: "Who has right of way over a small UAS?",
-    choices: ["Only emergency aircraft", "Only aircraft in controlled airspace", "All manned aircraft", "Only aircraft on final approach"],
+    prompt: "What must a small UAS do under the Part 107 right-of-way rule?",
+    choices: ["Yield only to emergency aircraft", "Yield only in controlled airspace", GOVERNED_FACTS.operatingLimitations.rightOfWaySummary, "Yield only to aircraft on final approach"],
     correctIndex: 2,
-    explanation: "Small UAS must yield right of way to all manned aircraft."
+    explanation: GOVERNED_FACTS.operatingLimitations.rightOfWaySummary
   },
   {
     id: "m2-q5",
@@ -105,10 +114,10 @@ export const moduleQuestions: QuizQuestion[] = [
     id: "m2-q6",
     moduleId: "2",
     topic: "Regulations",
-    prompt: "Within how many days must qualifying Part 107 accidents be reported to the FAA?",
+    prompt: "Within how many days must qualifying Part 107 safety events be reported to the FAA?",
     choices: ["3 days", "5 days", "10 days", "30 days"],
     correctIndex: 2,
-    explanation: "Qualifying accidents must be reported within 10 days."
+    explanation: `Qualifying safety events must be reported within ${GOVERNED_FACTS.operatingLimitations.safetyEventReportDays} days.`
   },
   {
     id: "m2-q7",
@@ -124,18 +133,18 @@ export const moduleQuestions: QuizQuestion[] = [
     moduleId: "2",
     topic: "Airspace",
     prompt: "Which airspace types require authorization before Part 107 operations?",
-    choices: ["Only Class G", "Class B, C, D, and surface Class E", "Only restricted areas", "Only MOAs"],
+    choices: ["Only Class G", GOVERNED_FACTS.airspaceWeather.authorizationSummary, "Only restricted areas", "Only MOAs"],
     correctIndex: 1,
-    explanation: "Part 107 pilots need authorization for Class B, C, D, and surface Class E controlled airspace."
+    explanation: GOVERNED_FACTS.airspaceWeather.authorizationSummary
   },
   {
     id: "m3-q1",
     moduleId: "3",
     topic: "Airspace",
     prompt: "Which airspace classes require Part 107 authorization before flight?",
-    choices: ["Only Class A", "Class B, C, D, and surface Class E", "Only Class G and E", "Class A, B, C, and D"],
+    choices: ["Only Class A", GOVERNED_FACTS.airspaceWeather.authorizationSummary, "Only Class G and E", "Class A, B, C, and D"],
     correctIndex: 1,
-    explanation: "Part 107 requires authorization for Class B, C, D, and surface Class E. Class G and Class E above 700 ft do not require authorization."
+    explanation: GOVERNED_FACTS.airspaceWeather.authorizationSummary
   },
   {
     id: "m3-q2",
@@ -178,9 +187,9 @@ export const moduleQuestions: QuizQuestion[] = [
     moduleId: "4",
     topic: "Airspace",
     prompt: "On a sectional chart, what does a dashed magenta line indicate?",
-    choices: ["Class B boundary", "Class C boundary", "Class D boundary", "Surface Class E boundary"],
+    choices: ["Class B boundary", "Class C boundary", "Class D boundary", "Class E boundary at the surface — airport surface area or extension"],
     correctIndex: 3,
-    explanation: "Dashed magenta lines mark surface Class E airspace. Part 107 authorization is required before operating there."
+    explanation: GOVERNED_FACTS.airspaceWeather.dashedMagentaGuidance
   },
   {
     id: "m4-q2",
@@ -333,7 +342,7 @@ export const moduleQuestions: QuizQuestion[] = [
     prompt: "What should a drone pilot do if they see a manned aircraft approaching during a Part 107 flight?",
     choices: ["Climb to get above it", "Descend immediately and land as soon as safe", "Continue flying — the manned pilot will avoid the drone", "Increase speed to leave the area"],
     correctIndex: 1,
-    explanation: "Small UAS must yield right of way to all manned aircraft. The correct response is to descend immediately and land when safe."
+    explanation: `${GOVERNED_FACTS.operatingLimitations.rightOfWaySummary}. The correct response is to descend immediately and land when safe.`
   },
   {
     id: "m7-q4",
@@ -403,7 +412,7 @@ export const moduleQuestions: QuizQuestion[] = [
     moduleId: "9",
     topic: "Operations",
     prompt: "What is the Part 107 rule regarding alcohol consumption before flight?",
-    choices: ["No alcohol within 4 hours", "No alcohol within 8 hours; no operation while under the influence, using a safety-impairing drug, or at an alcohol concentration of 0.04 or greater", "No alcohol within 12 hours", "An alcohol concentration below 0.04 is the only restriction"],
+    choices: ["No alcohol within 4 hours", ALCOHOL_DRUG_SUMMARY, "No alcohol within 12 hours", "An alcohol concentration below 0.04 is the only restriction"],
     correctIndex: 1,
     explanation: "Section 107.27 incorporates § 91.17. The independent prohibitions include operating within 8 hours of drinking, while under the influence, while using a drug that affects faculties contrary to safety, or with an alcohol concentration of 0.04 or greater."
   },
@@ -495,7 +504,7 @@ export const moduleQuestions: QuizQuestion[] = [
     prompt: "What is the passing score on the FAA Part 107 knowledge test?",
     choices: ["60%", "70%", "80%", "85%"],
     correctIndex: 1,
-    explanation: "The passing score is 70%, which means 42 correct answers out of 60 questions."
+    explanation: `The passing score is 70%, which means 42 correct answers out of ${GOVERNED_FACTS.acsWeighting.totalQuestions} questions.`
   },
   {
     id: "m11-q2",
@@ -504,7 +513,7 @@ export const moduleQuestions: QuizQuestion[] = [
     prompt: "Which ACS topic area has the largest percentage range on the Part 107 knowledge test?",
     choices: ["Weather", "Regulations", "Operations", "Loading & Performance"],
     correctIndex: 2,
-    explanation: `Operations has the largest current ACS range at ${ACS_TOPIC_WEIGHTS.operations}. Regulations and Airspace & Requirements are each ${ACS_TOPIC_WEIGHTS.regulations}.`
+    explanation: describeAcsRanges(ACS_TOPIC_WEIGHTS)
   },
   {
     id: "m11-q3",
@@ -580,9 +589,9 @@ export const examQuestions: QuizQuestion[] = [
     id: "exam-reg-1",
     topic: "Regulations",
     prompt: "How long is FAA drone registration generally valid?",
-    choices: ["1 year", "2 years", "3 years", "5 years"],
+    choices: ["1 year", "2 years", `${GOVERNED_FACTS.registration.validityYears} years`, "5 years"],
     correctIndex: 2,
-    explanation: "FAA drone registration is generally valid for 3 years."
+    explanation: `FAA drone registration is generally valid for ${GOVERNED_FACTS.registration.validityYears} years.`
   },
   {
     id: "exam-reg-2",
@@ -638,7 +647,7 @@ export const examQuestions: QuizQuestion[] = [
     prompt: "A Part 107 pilot is operating at 300 ft AGL in Class E airspace that begins at 700 ft AGL. What authorization is required?",
     choices: ["Full LAANC authorization", "None — the operation is below the Class E floor", "A waiver for airspace operations", "Manual FAA authorization only"],
     correctIndex: 1,
-    explanation: "Only surface Class E requires authorization. Class E beginning at 700 ft AGL or higher does not restrict operations below that floor."
+    explanation: "No authorization is required because the operation remains below the 700-ft Class E floor. Section 107.41's Class E authorization requirement applies to airport surface areas (Class E2), not every surface extension."
   },
   {
     id: "exam-airspace-5",
@@ -670,7 +679,7 @@ export const examQuestions: QuizQuestion[] = [
     prompt: "On a sectional chart, which line style indicates Class D airspace?",
     choices: ["Solid blue", "Solid magenta", "Dashed blue", "Dashed magenta"],
     correctIndex: 2,
-    explanation: "Class D airspace is shown with a dashed blue boundary. Class E surface is dashed magenta."
+    explanation: "Class D airspace is shown with a dashed blue boundary. Dashed magenta depicts Class E at the surface and can mark an airport surface area or an extension."
   },
   {
     id: "exam-chart-2",
@@ -742,7 +751,7 @@ export const examQuestions: QuizQuestion[] = [
     prompt: "A METAR reports SCT015 BKN030. What does this tell a Part 107 pilot?",
     choices: ["Scattered clouds at 150 ft — no ceiling", "Scattered at 1,500 ft, broken at 3,000 ft — ceiling is 3,000 ft", "Severe clear — no restrictions", "Ceiling at 1,500 ft"],
     correctIndex: 1,
-    explanation: "SCT is not a ceiling. BKN030 means broken at 3,000 ft — that IS a ceiling. The pilot must stay 500 ft below 3,000 ft (i.e., at or below 2,500 ft)."
+    explanation: "SCT is not a ceiling. BKN030 means broken at 3,000 ft — that is the ceiling. Cloud clearance alone would allow up to 2,500 ft AGL, but the standard 400 ft AGL remains more restrictive."
   },
   {
     id: "exam-weather-5",
@@ -835,10 +844,10 @@ export const examQuestions: QuizQuestion[] = [
   {
     id: "exam-phys-1",
     topic: "Operations",
-    prompt: "A remote pilot took a common antihistamine for allergies this morning. The label says 'may cause drowsiness.' Can they legally fly under Part 107?",
-    choices: ["Yes — it is over-the-counter, not prescription", "Yes — as long as they consumed it more than 8 hours ago", "No — any medication that may impair faculties makes operation illegal", "Yes — if they drink coffee to counteract the drowsiness"],
+    prompt: "A remote pilot took a common antihistamine and now feels drowsy before flight. Can they legally fly under Part 107?",
+    choices: ["Yes — it is over-the-counter, not prescription", "Yes — as long as they consumed it more than 8 hours ago", GOVERNED_FACTS.alcoholDrugRestrictions.drugScenarioAnswer, "Yes — if they drink coffee to counteract the drowsiness"],
     correctIndex: 2,
-    explanation: "Part 107 prohibits operation if any drug affects faculties in any way contrary to safety. 'May cause drowsiness' on the label = do not fly. Prescription vs OTC does not matter."
+    explanation: "Section 107.27 incorporates § 91.17, which prohibits operation while using a drug that affects faculties contrary to safety. The pilot's actual drowsiness establishes the safety impairment; prescription versus over-the-counter status does not control."
   },
   {
     id: "exam-phys-2",
@@ -925,8 +934,8 @@ export const examQuestions: QuizQuestion[] = [
     topic: "Airspace",
     prompt: "On a sectional chart, what does a solid magenta line generally indicate?",
     choices: ["Class B airspace", "Class C airspace", "Class E airspace beginning at the surface", "A military training route"],
-    correctIndex: 2,
-    explanation: "A solid magenta boundary indicates Class E airspace that starts at the surface. Part 107 pilots need authorization to operate there."
+    correctIndex: 1,
+    explanation: `A solid magenta boundary depicts Class C airspace. ${GOVERNED_FACTS.airspaceWeather.dashedMagentaGuidance}`
   },
   {
     id: "exam-airspace-10",
@@ -1148,9 +1157,9 @@ export const examQuestions: QuizQuestion[] = [
     id: "exam-reg-3",
     topic: "Regulations",
     prompt: "What is the maximum groundspeed allowed for standard Part 107 operations?",
-    choices: ["60 mph", "87 knots", "100 mph", "120 knots"],
+    choices: ["60 mph", "87 mph", "100 mph (87 knots)", "120 knots"],
     correctIndex: 2,
-    explanation: "Standard Part 107 operations are limited to 100 mph groundspeed unless a waiver applies."
+    explanation: `Standard Part 107 operations are limited to ${GOVERNED_FACTS.operatingLimitations.maxGroundspeedMph} mph (${GOVERNED_FACTS.operatingLimitations.maxGroundspeedKnots} knots) groundspeed unless a waiver applies.`
   },
   {
     id: "exam-reg-4",
@@ -1187,10 +1196,10 @@ export const examQuestions: QuizQuestion[] = [
   {
     id: "exam-reg-8",
     topic: "Regulations",
-    prompt: "When must a Part 107 accident be reported to the FAA?",
-    choices: ["Only when the aircraft is destroyed", "Within 10 days if it causes serious injury, loss of consciousness, or qualifying property damage", "Within 24 hours for every hard landing", "Only if it occurs in controlled airspace"],
+    prompt: "When must a Part 107 safety event be reported to the FAA?",
+    choices: ["Only when the aircraft is destroyed", SAFETY_EVENT_REPORTING_SUMMARY, "Within 24 hours for every hard landing", "Only if it occurs in controlled airspace"],
     correctIndex: 1,
-    explanation: "Part 107 accident reports are due within 10 days when the event meets the injury or property-damage reporting threshold."
+    explanation: SAFETY_EVENT_REPORTING_SUMMARY
   },
   {
     id: "exam-reg-9",
@@ -1236,9 +1245,9 @@ export const examQuestions: QuizQuestion[] = [
     id: "exam-reg-14",
     topic: "Regulations",
     prompt: "What is the maximum allowed weight for a small unmanned aircraft operated under Part 107?",
-    choices: ["Less than 25 pounds", "Less than 55 pounds including anything attached or carried", "55 pounds empty weight plus payload", "Less than 100 pounds with registration"],
+    choices: ["Less than 25 pounds", SMALL_UAS_WEIGHT_SUMMARY, "55 pounds empty weight plus payload", "Less than 100 pounds with registration"],
     correctIndex: 1,
-    explanation: "A small unmanned aircraft under Part 107 must weigh less than 55 pounds, including everything attached to or carried by the aircraft."
+    explanation: `A small unmanned aircraft is ${SMALL_UAS_WEIGHT_SUMMARY.toLowerCase()}.`
   },
   {
     id: "exam-reg-15",

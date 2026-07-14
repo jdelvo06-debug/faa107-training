@@ -34,6 +34,7 @@ import {
   getManualSubmitGuard,
   type ExamCompletionFallback,
 } from "@/lib/exam-session";
+import { GOVERNED_FACTS } from "@/lib/regulatory-sources";
 import type {
   AssessmentVariant,
   ExamVariant,
@@ -43,8 +44,10 @@ import type {
 import { cn } from "@/lib/utils";
 import styles from "./modern-flight-school.module.css";
 
-const FAA_EXAM_SECONDS = 120 * 60;
-const DRILL_QUESTION_COUNT = 60;
+const FAA_EXAM_SECONDS =
+  GOVERNED_FACTS.acsWeighting.testingTimeMinutes * 60;
+const DRILL_QUESTION_COUNT = GOVERNED_FACTS.acsWeighting.totalQuestions;
+const PRESENTED_CHOICE_COUNT = 3;
 
 function formatTime(seconds: number) {
   const minutes = Math.floor(seconds / 60);
@@ -287,12 +290,12 @@ export function PracticeExam({ questions }: { questions: QuizQuestion[] }) {
             <Plane className="h-8 w-8 text-amber-300" />
             <h2 className="mt-4 text-2xl font-bold text-white">FAA-like Timed Exam</h2>
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              Closest practice simulation: 60 questions, 120 minutes, exact ACS topic distribution, deterministic three-choice presentation, and first-answer locking.
+              Closest practice simulation: {GOVERNED_FACTS.acsWeighting.totalQuestions} questions, {GOVERNED_FACTS.acsWeighting.testingTimeMinutes} minutes, a fixed ACS-aligned topic allocation within the current ranges, deterministic {PRESENTED_CHOICE_COUNT}-choice presentation, and first-answer locking.
             </p>
             <div className="mt-4 flex flex-wrap gap-2 text-xs">
-              <Badge variant="amber">60 questions</Badge>
-              <Badge variant="amber">120 minutes</Badge>
-              <Badge variant="amber">3 choices</Badge>
+              <Badge variant="amber">{GOVERNED_FACTS.acsWeighting.totalQuestions} questions</Badge>
+              <Badge variant="amber">{GOVERNED_FACTS.acsWeighting.testingTimeMinutes} minutes</Badge>
+              <Badge variant="amber">{PRESENTED_CHOICE_COUNT} choices</Badge>
             </div>
             <Button size="lg" className="mt-5 w-full sm:w-auto" onClick={() => startExam("faa_timed")}>
               Start FAA-like exam
