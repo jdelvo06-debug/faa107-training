@@ -15,7 +15,7 @@ const courseModules = [
     title: "Module One",
     description: "First module description.",
     estimatedMinutes: 20,
-    slides: [{ id: "m1-1" }, { id: "m1-2" }],
+    slideIds: ["m1-1", "m1-2"],
   },
   {
     id: "2",
@@ -23,7 +23,7 @@ const courseModules = [
     title: "Module Two",
     description: "Second module description.",
     estimatedMinutes: 25,
-    slides: [{ id: "m2-1" }, { id: "m2-2" }],
+    slideIds: ["m2-1", "m2-2"],
   },
   {
     id: "3",
@@ -31,7 +31,7 @@ const courseModules = [
     title: "Module Three",
     description: "Third module description.",
     estimatedMinutes: 30,
-    slides: [{ id: "m3-1" }, { id: "m3-2" }],
+    slideIds: ["m3-1", "m3-2"],
   },
   {
     id: "4",
@@ -39,7 +39,7 @@ const courseModules = [
     title: "Module Four",
     description: "Fourth module description.",
     estimatedMinutes: 35,
-    slides: [{ id: "m4-1" }, { id: "m4-2" }],
+    slideIds: ["m4-1", "m4-2"],
   },
 ];
 
@@ -88,7 +88,7 @@ function renderModuleCards(progress) {
     const courseModule = courseModules.find((item) => item.id === moduleId);
     const moduleProgress = storedProgress.modules[moduleId];
     if (!courseModule || !moduleProgress) return 0;
-    return Math.round((moduleProgress.visitedSlideIds.length / courseModule.slides.length) * 100);
+    return Math.round((moduleProgress.visitedSlideIds.length / courseModule.slideIds.length) * 100);
   };
   const localRequire = (specifier) => {
     if (specifier === "react") return React;
@@ -105,7 +105,9 @@ function renderModuleCards(progress) {
         CardTitle: ui.CardTitle,
       };
     }
-    if (specifier === "@/lib/course-data") return { modules: courseModules };
+    if (specifier === "@/lib/course-metadata") {
+      return { courseModuleMetadata: courseModules };
+    }
     if (specifier === "@/lib/progress-selectors") return { getModuleCompletion };
     if (specifier === "@/lib/progress-storage") return { useProgress: () => progress };
     if (specifier === "@/lib/utils") {

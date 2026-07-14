@@ -1,5 +1,5 @@
 import { flashcards } from "@/lib/flashcards";
-import { modules } from "@/lib/course-data";
+import { courseModuleMetadata as modules } from "@/lib/course-metadata";
 import type { ProgressState, TopicArea } from "@/lib/types";
 
 export function getModuleCompletion(moduleId: string, progress: ProgressState) {
@@ -9,11 +9,11 @@ export function getModuleCompletion(moduleId: string, progress: ProgressState) {
     return 0;
   }
 
-  return Math.round((moduleProgress.visitedSlideIds.length / courseModule.slides.length) * 100);
+  return Math.round((moduleProgress.visitedSlideIds.length / courseModule.slideIds.length) * 100);
 }
 
 export function getOverallProgress(progress: ProgressState) {
-  const totalSlides = modules.reduce((total, courseModule) => total + courseModule.slides.length, 0);
+  const totalSlides = modules.reduce((total, courseModule) => total + courseModule.slideIds.length, 0);
   const visitedSlides = modules.reduce((total, courseModule) => {
     return total + (progress.modules[courseModule.id]?.visitedSlideIds.length ?? 0);
   }, 0);
@@ -67,7 +67,7 @@ export function getResumeTarget(progress: ProgressState) {
     if (courseModule) {
       const moduleProgress = progress.modules[courseModule.id];
       if (moduleProgress?.lastSlideId) {
-        const slideIndex = courseModule.slides.findIndex((s) => s.id === moduleProgress.lastSlideId);
+        const slideIndex = courseModule.slideIds.indexOf(moduleProgress.lastSlideId);
         const slideNumber = slideIndex !== -1 ? slideIndex + 1 : 1;
         return {
           label: `Resume Module ${courseModule.number}, slide ${slideNumber}`,
@@ -86,7 +86,7 @@ export function getResumeTarget(progress: ProgressState) {
   if (firstIncomplete) {
     const moduleProgress = progress.modules[firstIncomplete.id];
     if (moduleProgress?.lastSlideId) {
-      const slideIndex = firstIncomplete.slides.findIndex((s) => s.id === moduleProgress.lastSlideId);
+      const slideIndex = firstIncomplete.slideIds.indexOf(moduleProgress.lastSlideId);
       const slideNumber = slideIndex !== -1 ? slideIndex + 1 : 1;
       return {
         label: `Resume Module ${firstIncomplete.number}, slide ${slideNumber}`,

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BookOpen, CheckSquare, Clock3, Layers3, RefreshCcw, Target } from "lucide-react";
-import { modules } from "@/lib/course-data";
+import { courseModuleMetadata as modules } from "@/lib/course-metadata";
 import { StudioShell } from "../studio-shell";
 import heroImage from "../assets/modern-flight-school-hero.png";
 import styles from "../design-lab.module.css";

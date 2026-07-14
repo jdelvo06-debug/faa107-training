@@ -1,4 +1,4 @@
-import { modules } from "@/lib/course-data";
+import { courseModuleMetadata as modules } from "@/lib/course-metadata";
 import { flashcards } from "@/lib/flashcards";
 import { examQuestions, moduleQuestions } from "@/lib/questions";
 import type {
@@ -128,13 +128,13 @@ function normalizeTopicScores(value: unknown): QuizAttempt["topicScores"] | null
 function normalizeModuleProgress(moduleId: string, value: unknown, now: Date): ModuleProgress | null {
   const courseModule = MODULE_BY_ID.get(moduleId);
   if (!courseModule || !isPlainObject(value) || !Array.isArray(value.visitedSlideIds)) return null;
-  const slideOrder = new Map(courseModule.slides.map((slide, index) => [slide.id, index]));
+  const slideOrder = new Map(courseModule.slideIds.map((slideId, index) => [slideId, index]));
   const visitedSlideIds = Array.from(new Set(
     value.visitedSlideIds.filter((slideId): slideId is string => typeof slideId === "string" && slideOrder.has(slideId)),
   )).sort((left, right) => (slideOrder.get(left) ?? 0) - (slideOrder.get(right) ?? 0));
   const progress: ModuleProgress = {
     visitedSlideIds,
-    completed: visitedSlideIds.length === courseModule.slides.length,
+    completed: visitedSlideIds.length === courseModule.slideIds.length,
   };
   const lastSlideId = typeof value.lastSlideId === "string" && visitedSlideIds.includes(value.lastSlideId)
     ? value.lastSlideId
@@ -367,7 +367,7 @@ function mergeModules(local: ProgressState, remote: ProgressState): ProgressStat
     const localProgress = local.modules[courseModule.id];
     const remoteProgress = remote.modules[courseModule.id];
     if (!localProgress && !remoteProgress) continue;
-    const slideOrder = new Map(courseModule.slides.map((slide, index) => [slide.id, index]));
+    const slideOrder = new Map(courseModule.slideIds.map((slideId, index) => [slideId, index]));
     const visitedSlideIds = Array.from(new Set([
       ...(localProgress?.visitedSlideIds ?? []),
       ...(remoteProgress?.visitedSlideIds ?? []),
@@ -384,7 +384,7 @@ function mergeModules(local: ProgressState, remote: ProgressState): ProgressStat
       : visitedSlideIds.at(-1);
     const moduleProgress: ModuleProgress = {
       visitedSlideIds,
-      completed: visitedSlideIds.length === courseModule.slides.length,
+      completed: visitedSlideIds.length === courseModule.slideIds.length,
     };
     if (lastSlideId) moduleProgress.lastSlideId = lastSlideId;
     const updatedAt = [localTime, remoteTime].filter((item): item is string => Boolean(item)).sort().at(-1);

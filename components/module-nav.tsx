@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CheckCircle2, Circle, Gauge } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { modules } from "@/lib/course-data";
+import { courseModuleMetadata as modules } from "@/lib/course-metadata";
 import { getModuleCompletion } from "@/lib/progress-selectors";
 import { useProgress } from "@/lib/progress-storage";
 import { cn } from "@/lib/utils";

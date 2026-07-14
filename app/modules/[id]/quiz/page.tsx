@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { QuizEngine } from "@/components/quiz-engine";
 import { Button } from "@/components/ui/button";
-import { getModule, modules } from "@/lib/course-data";
+import { courseModuleMetadata as modules, getCourseModuleMetadata } from "@/lib/course-metadata";
 import { getQuestionsForModule } from "@/lib/questions";
 
 export function generateStaticParams() {
@@ -11,7 +11,7 @@ export function generateStaticParams() {
 
 export default async function ModuleQuizPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const courseModule = getModule(id);
+  const courseModule = getCourseModuleMetadata(id);
   if (!courseModule) {
     notFound();
   }

@@ -74,7 +74,9 @@ function renderDashboard({ user, loading, resetProgress }) {
     if (specifier === "@/components/auth-provider") {
       return { useAuth: () => ({ user, loading, resetProgress }) };
     }
-    if (specifier === "@/lib/course-data") return { modules: [] };
+    if (specifier === "@/lib/course-metadata") {
+      return { courseModuleMetadata: [] };
+    }
     if (specifier === "@/lib/progress-selectors") {
       return {
         getFlashcardTotals: () => ({ reviewed: 0, total: 0 }),

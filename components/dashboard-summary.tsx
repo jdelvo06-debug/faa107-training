@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen, CircleAlert, Clock3, Cloud, Layers3, RotateCcw, Target } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
-import { modules } from "@/lib/course-data";
+import { courseModuleMetadata as modules } from "@/lib/course-metadata";
 import { getFlashcardTotals, getOverallProgress, getResumeTarget, getTopicModuleHref, getWeakAreas } from "@/lib/progress-selectors";
 import { useProgress } from "@/lib/progress-storage";
 import styles from "./modern-flight-school.module.css";

@@ -6,7 +6,7 @@ import { ArrowRight, CheckCircle2, Clock, Gauge, RotateCcw } from "lucide-react"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { modules } from "@/lib/course-data";
+import { courseModuleMetadata as modules } from "@/lib/course-metadata";
 import { getModuleCompletion } from "@/lib/progress-selectors";
 import { useProgress } from "@/lib/progress-storage";
 import type { QuizAttempt } from "@/lib/types";

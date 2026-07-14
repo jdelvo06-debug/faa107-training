@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BookOpen, CheckSquare2, Clock3, Layers3, RotateCw, Target } from "lucide-react";
-import { modules } from "@/lib/course-data";
+import { courseModuleMetadata as modules } from "@/lib/course-metadata";
 import heroImage from "@/app/design-lab/assets/modern-flight-school-hero.png";
 import styles from "@/components/modern-flight-school.module.css";
 
