@@ -6,8 +6,9 @@ export function generateStaticParams() {
   return modules.map((courseModule) => ({ id: courseModule.id }));
 }
 
-export default function ModulePage({ params }: { params: { id: string } }) {
-  const courseModule = getModule(params.id);
+export default async function ModulePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const courseModule = getModule(id);
   if (!courseModule) {
     notFound();
   }

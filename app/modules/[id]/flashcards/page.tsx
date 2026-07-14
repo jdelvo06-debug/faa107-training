@@ -9,8 +9,9 @@ export function generateStaticParams() {
   return modules.map((courseModule) => ({ id: courseModule.id }));
 }
 
-export default function ModuleFlashcardsPage({ params }: { params: { id: string } }) {
-  const courseModule = getModule(params.id);
+export default async function ModuleFlashcardsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const courseModule = getModule(id);
   if (!courseModule) {
     notFound();
   }
