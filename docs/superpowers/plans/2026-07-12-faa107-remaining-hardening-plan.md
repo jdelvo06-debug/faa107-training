@@ -153,6 +153,8 @@ Execute Phases 1–5 in order. Phase 6 is optional and requires a separate produ
 
 **Objective:** Add deliberate, versioned offline behavior and verify the already-shipped install/SEO/safe-area foundations on real Apple hardware and assistive technology.
 
+**Approved offline boundary (2026-07-14):** Cache the same-origin application shell and course assets a learner has downloaded. Keep navigation network-first with a safe offline fallback, and cache static/course assets only under a versioned strategy. Never cache login/signup/auth callback routes, OAuth exchanges, Supabase requests/responses, or user/account-specific progress data. Anonymous local progress remains browser-local; offline mode makes no authentication or cross-device-sync promise.
+
 **Likely paths:**
 
 - service-worker/offline implementation under `public/`, `app/`, or a selected maintained Next-compatible integration
