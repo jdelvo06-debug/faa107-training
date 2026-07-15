@@ -2,10 +2,10 @@
 
 ## Current Status
 
-- **Last reconciled:** 2026-07-12
+- **Last reconciled:** 2026-07-15
 - **Production:** [faa107training.org](https://faa107training.org)
 - **Production/default branch:** `codex/faa107-training-platform`
-- **Deployed application commit:** `411a2b7`
+- **Deployed application commit:** `f4493c9`
 - **Hosting:** Vercel
 - **Backend:** Supabase project `qbeioesktbpvdlgzrgsm`
 - **Auth:** email/password and Google OAuth are deployed; Apple Sign In is deferred
@@ -38,7 +38,16 @@ The audit remains historical evidence. Its original findings should not be read 
 
 - `5354045` — shipped the production design plus PWA metadata/icons, SEO metadata, sitemap/robots behavior, and iOS safe-area work
 - Custom production domain is `faa107training.org`
-- Deliberate offline caching/update behavior and real-device iPhone/VoiceOver verification remain open; already-shipped manifest/SEO/safe-area work is not backlog
+- `3b8f886` — deployed versioned offline foundation: same-origin course caching, safe offline fallback, stale-cache retirement, and update-ready messaging
+- Physical iPhone/VoiceOver verification remains open; already-shipped manifest/SEO/safe-area/offline-code work is not backlog
+
+### Security, governance, and performance hardening — 2026-07-14 to 2026-07-15
+
+- `144a1af`, `6271915` — upgraded Next.js and `eslint-config-next` to 15.5.20; no high/critical production audit finding remains (two moderate bundled PostCSS entries are documented residual risk)
+- `2b97e78` — deployed report-only CSP plus `nosniff`, referrer, permissions, and frame-protection headers
+- `926f9e6` — deployed FAA/eCFR source registry, content-governance process, and source-backed learner-content corrections
+- `cf417d4` — split lightweight 13-module/118-slide metadata from route-scoped lesson bodies; shared curriculum artifact reduced roughly 86% compressed
+- `f4493c9` — records payment planning as deferred
 
 ### Authentication
 
@@ -68,11 +77,13 @@ Deployment facts:
 
 ## Current Architecture
 
-- Next.js 14 App Router, React 18, TypeScript 5.9, Tailwind CSS, Radix/shadcn UI, and Framer Motion
+- Next.js 15.5.20 App Router, React 18, TypeScript 5.9, Tailwind CSS, Radix/shadcn UI, and Framer Motion
 - Supabase SSR/client helpers for auth and session refresh
 - Local synchronous storage funnel for learning UI, with canonical cache/merge/RPC/coordinator modules for authenticated sync
 - PostgreSQL RLS and security-definer RPCs with revision and reset-generation safeguards
 - Realtime Postgres Changes as non-authoritative refresh acceleration
+- Versioned service worker caches same-origin public course shell/assets only; auth, OAuth, Supabase, and account data are excluded
+- FAA/eCFR source registry in `lib/regulatory-sources.ts`, with review workflow in `docs/content-governance.md`
 - Node behavioral tests, Supabase SQL tests, and targeted browser proof
 
 ## Completed Product Scope
@@ -82,6 +93,8 @@ Deployment facts:
 - Exact-slide resume, weak-area links, progress dashboard, and resumable exam sessions
 - Responsive/mobile and accessibility remediation foundations
 - PWA install metadata/icons, SEO metadata, sitemap/robots, and iOS safe-area styling
+- Report-only browser security headers, governed FAA/eCFR content sources, and bundle-split course metadata
+- Offline PWA foundation with safe fallback, cache versioning, and update-ready messaging
 - Email/password and Google sign-in
 - Local-first, user-isolated account progress sync with restore and reset
 
@@ -89,16 +102,14 @@ Deployment facts:
 
 Priority order is defined in `docs/superpowers/plans/2026-07-12-faa107-remaining-hardening-plan.md`:
 
-1. Upgrade Next.js and related dependencies against current advisories; add and verify security headers.
-2. Add content source/review-date governance and a repeatable freshness review.
-3. Split module metadata from full curriculum bodies and measure bundle improvements.
-4. Add deliberate offline caching/update behavior, then complete physical iPhone Safari/standalone/rotation and VoiceOver QA.
-5. Perform the deferred Realtime open-tab soak observation with known pre-reset listener data.
-6. Explore payment architecture only after explicit product approval; do not mix it into security or PWA hardening.
+1. Complete the physical iPhone Safari/standalone/rotation and VoiceOver checklist in `docs/pwa-device-qa-checklist.md`.
+2. Perform the deferred Realtime open-tab soak in `docs/realtime-reset-soak-checklist.md` with known pre-reset listener data.
+3. Perform quarterly/event-triggered FAA source freshness review under `docs/content-governance.md`.
+4. Payment architecture is deferred until Jeremy explicitly reopens it.
 
 ## Decisions and Boundaries
 
-- Free platform today; monetization is unapproved future planning.
+- Free platform today; payment/subscription planning is explicitly deferred.
 - Browser/PWA remains the primary distribution path; no native rewrite is planned.
 - Apple Sign In is deferred.
 - Active in-progress exam state remains device-local unless a later approved design changes that boundary.
