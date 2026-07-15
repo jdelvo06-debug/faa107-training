@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#b83a1a">
+    <title>Offline | FAA Part 107 Training</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      * { box-sizing: border-box; }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: calc(1.5rem + env(safe-area-inset-top)) calc(1.5rem + env(safe-area-inset-right)) calc(1.5rem + env(safe-area-inset-bottom)) calc(1.5rem + env(safe-area-inset-left));
+        color: #f4f8fb;
+        background: radial-gradient(circle at top, #123655 0, #061525 55%);
+      }
+      main { width: min(100%, 38rem); padding: clamp(1.5rem, 5vw, 3rem); border: 1px solid #38536c; border-radius: 1rem; background: #0b2135; box-shadow: 0 1.5rem 4rem #020b13aa; }
+      p { color: #c7d4df; line-height: 1.65; }
+      .eyebrow { color: #f59e0b; font-size: .78rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+      h1 { margin: .35rem 0 1rem; font-size: clamp(2rem, 7vw, 3.25rem); line-height: 1; }
+      nav { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }
+      a { min-height: 2.75rem; display: inline-flex; align-items: center; padding: .7rem 1rem; border-radius: .55rem; color: #071421; background: #f59e0b; font-weight: 800; text-decoration: none; }
+      a:last-child { color: #e8f1f7; background: #1e3b52; }
+      a:focus-visible { outline: .2rem solid #fff; outline-offset: .2rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Connection unavailable</p>
+      <h1>You&rsquo;re offline</h1>
+      <p>Course pages and charts that you previously opened on this device may still be available.</p>
+      <p>Login, authentication, and account sync require an internet connection. Offline study does not provide cross-device sync or background sync.</p>
+      <nav aria-label="Offline course options">
+        <a href="/modules">Open cached modules</a>
+        <a href="/">Try course home</a>
+      </nav>
+    </main>
+  </body>
+</html>
