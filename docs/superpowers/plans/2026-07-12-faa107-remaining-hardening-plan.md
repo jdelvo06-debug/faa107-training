@@ -182,6 +182,8 @@ Execute Phases 1–5 in order. Phase 6 is optional and requires a separate produ
 
 ## Phase 6 — Optional Payment Planning (Planning Only)
 
+**Status:** Deferred by Jeremy on 2026-07-15. Do not begin planning or implementation until he explicitly reopens this phase.
+
 **Objective:** Decide whether monetization is desirable and, only if approved, produce a security/privacy-aware payment design before writing payment code.
 
 **Likely paths:**
