@@ -5,19 +5,24 @@ Guidance for agents working in the FAA Part 107 training resource.
 ## Project Mapping
 
 - Local repo path: `/Users/jeremydelvaux/projects/FAA 107`
-- Live URL: `https://faa107-training.vercel.app/`
+- Canonical production URL: `https://faa107training.org`
+- Hosting: Vercel.
 - Purpose: FAA Part 107 training and study resource.
 
 ## Operating Rules
 
-- Keep aviation/regulatory content accurate; verify rule references before making instructional changes.
-- Verify repo path, git remote, active branch, and clean/dirty status before editing.
-- Run project-appropriate tests/build/lint before reporting implementation work complete.
+- Keep aviation and regulatory content accurate. Verify current FAA/eCFR sources and rule references before instructional changes; never present an assumption as regulatory fact.
+- Before editing, verify the repo path, remote, branch, and status. Preserve all existing tracked and untracked work; do not reset, clean, stash, overwrite, stage, or include unrelated changes without Jeremy's approval.
+- Stay within the requested scope. If ambiguity affects safety, regulatory accuracy, credentials, deployment, or an irreversible action, stop and ask Jeremy. Otherwise use the smallest reversible assumption, document it, and do not broaden the task.
+- Use validation appropriate to the task and allowed scope; report any checks intentionally skipped.
+
+## Approval Boundaries
+
+- Without Jeremy's explicit approval, do not commit, push, open or update a pull request, merge, deploy, release, publish, or mutate external systems.
+- This prohibition includes auth, credentials, environment variables, provider settings, hosting, DNS, Supabase, Vercel, GitHub, and task boards.
 
 ## Agent OS Tasking Boundary
 
-- **Cortana Command Center Kanban is the source of truth for active Agent OS tasking.** Use it for priorities, card status, handoffs, and cross-agent coordination.
-- **Bypass Hermes Kanban by default.** Do not create, move, or depend on Hermes Kanban cards unless Jeremy explicitly asks for Hermes Kanban on that task.
-- **GitHub remains the source of truth for code workflow only.** Use GitHub for branches, commits, pull requests, CI, releases, and durable code review history. GitHub issues/PRs may reference Command Center Kanban cards, but they do not replace the Command Center board.
-- **External task boards are opt-in only.** Do not create, move, or treat external task-board items as source-of-truth tasking unless Jeremy explicitly asks for that tool on that project.
-- Before starting non-trivial work, identify the relevant Command Center Kanban card when one exists. If there is no card, proceed from Jeremy's direct instruction and avoid inventing task records unless asked.
+- Cortana Command Center (CCC) Kanban is the source of truth for active tasking; GitHub is for code workflow only. Bypass Hermes Kanban and other external boards unless Jeremy explicitly requests them.
+- Jeremy's direct instruction is sufficient tasking. Use an existing CCC card when one exists, but do not invent task records.
+- Codex reports exact evidence—files changed, diff summary, commands and results, skipped checks, blockers, and remaining risks—to Cortana/Hermes. Cortana/Hermes verifies the work and updates CCC; Codex must not create, move, or edit CCC cards unless Jeremy expressly authorizes it.
