@@ -8,3 +8,4 @@
 - A fresh checkout needs `npx playwright install chromium` before browser tests.
 - Vercel production environment downloads can contain empty values for sensitive variables. For local builds, verify public Supabase credentials point to the correct project before providing them. Do not overwrite production values with downloaded blanks.
 - The Vercel connector's get-project schema failed validation (`idOrName` expected despite a documented `projectId` argument). Use the authenticated Vercel CLI to inspect the existing project.
+- Supabase MCP assigns migration timestamps at application time. Match the repository filename to the recorded live version (`20260918003255`) to prevent a later CLI run from attempting to apply the same migration twice.
