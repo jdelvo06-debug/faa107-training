@@ -65,17 +65,17 @@ function loadTypeScriptModule(relativePath) {
 }
 
 function dbContainer() {
-  const names = execFileSync("docker", ["ps", "--format", "{{.Names}}"], { encoding: "utf8" })
-    .trim().split("\n").filter(Boolean);
-  const name = names.find((candidate) => candidate.startsWith("supabase_db_"));
-  assert.ok(name, "the local Supabase database container must be running");
+  const name = process.env.FAA107_TEST_CONTAINER;
+  const database = process.env.FAA107_TEST_DATABASE;
+  assert.ok(name && database?.startsWith("faa107_test_"),
+    "Set FAA107_TEST_CONTAINER and an isolated FAA107_TEST_DATABASE named faa107_test_*; never auto-select another project's database");
   return name;
 }
 
 function psql(sql) {
   return execFileSync(
     "docker",
-    ["exec", "-i", dbContainer(), "psql", "-X", "-qAt", "-v", "ON_ERROR_STOP=1", "-U", "postgres", "-d", "postgres"],
+    ["exec", "-i", dbContainer(), "psql", "-X", "-qAt", "-v", "ON_ERROR_STOP=1", "-U", "postgres", "-d", process.env.FAA107_TEST_DATABASE],
     { input: sql, encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
   ).trim();
 }
@@ -84,7 +84,7 @@ function psqlAsync(sql) {
   return new Promise((resolve, reject) => {
     const child = spawn(
       "docker",
-      ["exec", "-i", dbContainer(), "psql", "-X", "-qAt", "-v", "ON_ERROR_STOP=1", "-U", "postgres", "-d", "postgres"],
+      ["exec", "-i", dbContainer(), "psql", "-X", "-qAt", "-v", "ON_ERROR_STOP=1", "-U", "postgres", "-d", process.env.FAA107_TEST_DATABASE],
       { stdio: ["pipe", "pipe", "pipe"] },
     );
     let stdout = "";
@@ -103,7 +103,7 @@ function psqlAsync(sql) {
 function startPsqlController() {
   const child = spawn(
     "docker",
-    ["exec", "-i", dbContainer(), "psql", "-X", "-qAt", "-v", "ON_ERROR_STOP=1", "-U", "postgres", "-d", "postgres"],
+    ["exec", "-i", dbContainer(), "psql", "-X", "-qAt", "-v", "ON_ERROR_STOP=1", "-U", "postgres", "-d", process.env.FAA107_TEST_DATABASE],
     { stdio: ["pipe", "pipe", "pipe"] },
   );
   let stdout = "";
